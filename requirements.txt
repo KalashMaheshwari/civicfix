@@ -24,5 +24,11 @@ typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2025.2
 urllib3==2.7.0
-uvicorn==0.52.3
-virtualenv==20.31.2
+supabase>=2.0.0
+python-dotenv>=1.0.0
+python-multipart>=0.0.9
+pydantic-settings>=2.0.0
+transformers>=4.40.0
+torch>=2.0.0
+pillow>=10.0.0
+uvicorn>=0.25.0

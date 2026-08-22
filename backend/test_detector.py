@@ -147,41 +147,60 @@ def display_priority(priority_results):
     print("=" * 60)
 
 def process_complaint(complaint):
-    total_complaints = 0
-    duplicate_count = 0
+    image_path = complaint["image"]
+    user_id = complaint.get("user_id", "anonymous")
+    description = complaint.get("description", "")
+    latitude = complaint.get("latitude", 0.0)
+    longitude = complaint.get("longitude", 0.0)
+    timestamp = complaint.get("timestamp")
 
-    results = []
-    image = complaint["image"]
-    user_id = complaint["user_id"]
-    description = complaint["description"]
-    latitude = complaint["latitude"]
-    longitude = complaint["longitude"]
-    timestamp = complaint["timestamp"]
-    location = complaint["location"]
-
-    detection_result = detect_issue(image)
-
-    duplicate_result = calculate_duplicate_priority(image, latitude, longitude)
-
-    priority_result = calculate_priority(
-        detection_result,
-        description,
-        latitude,
-        longitude,
-        duplicate_result
-    )
-    result = detect_issue(image_path)
+    detection_result = detect_issue(image_path)
+    info = detection_result.get("info", [])
+    priority_results = calculate_duplicate_priority(info) if info else []
     
+    is_duplicate = info[-1].get("is_duplicate", False) if info else False
+    priority_score = priority_results[0]["priority_score"] if priority_results else 0
+
     return {
-    "user_id": user_id,
-    "category": ...,
-    "confidence": ...,
-    "description": description,
-    "latitude": latitude,
-    "longitude": longitude,
-    "timestamp": timestamp,
-    "is_duplicate": ...,
-    "severity": ...,
-    "priority": ...
-}
+        "user_id": user_id,
+        "category": detection_result["category"],
+        "confidence": detection_result["confidence"],
+        "description": description,
+        "latitude": latitude,
+        "longitude": longitude,
+        "timestamp": timestamp,
+        "is_duplicate": is_duplicate,
+        "priority": priority_score
+    }
+
+
+def main():
+    if not os.path.exists(TEST_FOLDER):
+        print(f"Folder '{TEST_FOLDER}' does not exist.")
+        return
+
+    images = [
+        f for f in os.listdir(TEST_FOLDER)
+        if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+    ]
+
+    if not images:
+        print(f"No test images found in {TEST_FOLDER}/")
+        return
+
+    print(f"Processing {len(images)} images in {TEST_FOLDER}...")
+    for img_name in images:
+        path = os.path.join(TEST_FOLDER, img_name)
+        res = process_complaint({
+            "image": path,
+            "user_id": "test_user",
+            "description": f"Test report for {img_name}",
+            "latitude": 28.6139,
+            "longitude": 77.2090
+        })
+        print(f"Image: {img_name:20} -> Category: {res['category']:25} | Priority: {res['priority']}")
+
+
+if __name__ == "__main__":
+    main()
 
