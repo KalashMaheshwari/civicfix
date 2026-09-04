@@ -59,10 +59,32 @@ if os.path.exists(dist_dir):
 
 @app.get("/health", tags=["General"])
 def health():
-    supabase = get_supabase()
+    db_status = "error"
+    db_latency_ms = None
+    try:
+        from backend.app.db.postgres_direct import get_db_cursor
+        import time
+        t0 = time.time()
+        with get_db_cursor() as cur:
+            if cur:
+                cur.execute("SELECT 1 AS probe;")
+                res = cur.fetchone()
+                if res and res.get("probe") == 1:
+                    db_status = "connected (Supabase PostGIS)"
+                    db_latency_ms = round((time.time() - t0) * 1000, 2)
+    except Exception as e:
+        db_status = f"connection error: {e}"
+
+    ai_status = "CLIP Vision Engine (openai/clip-vit-base-patch32, zero-overhead lazy load)"
+
+    logging.info(f"[Health Probe] DB Status: {db_status} ({db_latency_ms}ms) | AI: {ai_status}")
+
     return {
         "status": "healthy",
-        "database": "connected" if supabase is not None else "direct postgres"
+        "database": db_status,
+        "database_latency_ms": db_latency_ms,
+        "ai_vision_model": ai_status,
+        "version": "1.0.0"
     }
 
 
