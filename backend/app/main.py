@@ -48,9 +48,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Directories
 os.makedirs("uploaded_images", exist_ok=True)
-os.makedirs("backend/test_images", exist_ok=True)
 
-app.mount("/static/test_images", StaticFiles(directory="backend/test_images"), name="test_images")
 app.mount("/uploaded_images", StaticFiles(directory="uploaded_images"), name="uploaded_images")
 
 # Serve Built React Frontend if dist exists
