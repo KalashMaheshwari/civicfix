@@ -154,7 +154,9 @@ async def resolve_incident_by_govt(
 @router.post("/incidents/{incident_id}/vote-feedback")
 async def vote_incident_feedback(
     incident_id: str,
-    payload: CitizenFeedbackCreate,
+    is_fixed: bool = Form(...),
+    comment: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None, description="Proof photo (required if is_fixed is False)"),
     current_citizen: dict = Depends(require_roles(["citizen", "admin"]))
 ):
     """
@@ -162,24 +164,84 @@ async def vote_incident_feedback(
     Requires an authenticated Citizen account.
     Citizen reviews before/after photos and votes:
     - YES (is_fixed=true) -> Incident transitions to 'CLOSED_VERIFIED'
-    - NO  (is_fixed=false) -> Incident transitions to 'DISPUTED_REOPENED'
+    - NO  (is_fixed=false) -> Incident transitions to 'DISPUTED_REOPENED'. Requires photo proof.
     """
+    if not is_fixed and not file:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A proof photograph is required when reporting an issue as unresolved."
+        )
+
     citizen_id = str(current_citizen["id"])
+    proof_image_url = None
+
+    if file:
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be an image (JPEG, PNG, WEBP)."
+            )
+        try:
+            image_bytes = await file.read()
+            proof_image_url = TriageService.upload_image(image_bytes, file.filename or "proof.jpg")
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid image file: {str(e)}"
+            )
 
     result = DirectDB.record_citizen_feedback(
         incident_id=incident_id,
         citizen_id=citizen_id,
-        is_fixed=payload.is_fixed,
-        comment=payload.comment
+        is_fixed=is_fixed,
+        comment=comment,
+        proof_image_url=proof_image_url
     )
 
     if not result:
         raise HTTPException(status_code=500, detail="Failed to record citizen feedback.")
 
-    action = "confirmed as FIXED (YES)" if payload.is_fixed else "flagged as UNRESOLVED (NO - REOPENED)"
+    action = "confirmed as FIXED (YES)" if is_fixed else "flagged as UNRESOLVED (NO - REOPENED)"
 
     return {
         "message": f"Feedback recorded! Issue {action}.",
         "feedback": result["feedback"],
         "incident": result["updated_incident"]
     }
+
+
+# ==============================================================================
+# 5. REAL-TIME LIVE INCIDENTS STREAM (Server-Sent Events / SSE)
+# ==============================================================================
+import asyncio
+import json
+from fastapi.responses import StreamingResponse
+
+@router.get("/stream")
+async def stream_incident_updates():
+    """
+    Server-Sent Events endpoint streaming real-time queue changes and audits.
+    """
+    async def event_generator():
+        last_count = -1
+        while True:
+            try:
+                incidents = DirectDB.list_incidents(limit=25)
+                current_payload = json.dumps([
+                    {"id": i["id"], "status": i["status"], "priority_score": i["priority_score"]}
+                    for i in incidents
+                ])
+                yield f"data: {current_payload}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            await asyncio.sleep(5)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )

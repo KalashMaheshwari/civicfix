@@ -1,0 +1,17 @@
+{
+  "name": "CivicFix — Municipal Intelligence",
+  "short_name": "CivicFix",
+  "description": "AI-Powered Civic Issue Intelligence & Municipal Accountability Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

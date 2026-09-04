@@ -96,6 +96,7 @@ create table if not exists incident_feedbacks (
     citizen_profile_id uuid references profiles(id),
     is_fixed boolean not null, -- TRUE for YES (Fixed), FALSE for NO (Not Fixed)
     comment text,
+    proof_image_url text, -- For citizen NO votes (proof of issue still broken)
     created_at timestamptz not null default now(),
     constraint unique_citizen_incident_feedback unique (incident_id, citizen_id)
 );
@@ -106,6 +107,9 @@ create index if not exists idx_complaints_location on complaint_reports using gi
 create index if not exists idx_incidents_status on incidents(status);
 create index if not exists idx_incidents_category on incidents(category);
 create index if not exists idx_incidents_priority on incidents(priority_score desc);
+create index if not exists idx_incidents_priority_created on incidents(priority_score desc, created_at desc);
+create index if not exists idx_incidents_status_priority_created on incidents(status, priority_score desc, created_at desc);
+create index if not exists idx_incidents_cat_priority_created on incidents(category, priority_score desc, created_at desc);
 create index if not exists idx_feedbacks_incident on incident_feedbacks(incident_id);
 create index if not exists idx_incidents_embedding on incidents using hnsw (embedding vector_cosine_ops);
 

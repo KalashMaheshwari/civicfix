@@ -100,7 +100,7 @@ class TriageService:
         embedding = ai_result["embedding"]
 
         # If not a recognized civic problem, reject
-        if not is_civic:
+        if not is_civic or category == "other":
             return TriageResult(
                 is_civic_issue=False,
                 detected_category=category,
@@ -148,7 +148,7 @@ class TriageService:
             current_priority = new_priority
             logger.info(f"Duplicate match found for incident {incident_id}. Elevated priority: {new_priority}")
         else:
-            incident_record = DirectDB.create_incident({
+            incident_record = DirectDB.create_new_incident({
                 "category": category,
                 "title": f"{category.replace('_', ' ').title()} reported",
                 "description": description,

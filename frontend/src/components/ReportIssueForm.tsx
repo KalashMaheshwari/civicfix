@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Navigation, Send, Loader2 } from 'lucide-react';
 import { submitComplaintReport } from '../services/api';
+import { compressImage } from '../utils/imageCompressor';
 
 interface ReportIssueFormProps {
   citizenId: string;
@@ -18,11 +19,12 @@ export const ReportIssueForm: React.FC<ReportIssueFormProps> = ({ citizenId, onS
   const [loading, setLoading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      const compressed = await compressImage(file);
+      setSelectedFile(compressed);
+      setPreviewUrl(URL.createObjectURL(compressed));
     }
   };
 
