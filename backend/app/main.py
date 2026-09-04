@@ -84,3 +84,10 @@ def serve_react_app(full_path: str = ""):
         "docs": "/docs",
         "message": "React production bundle not built yet. Run 'npm run dev' inside frontend/ or 'npm run build'."
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    logging.info(f"Starting Uvicorn server on port {port}...")
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=port, log_level="info")
