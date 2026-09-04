@@ -20,6 +20,12 @@ export function formatImageUrl(url: string | null | undefined): string {
   if (!clean.startsWith('/')) {
     clean = '/' + clean;
   }
+
+  // If path is a public frontend asset (e.g. /demo issues/..., /bento/..., /citizen.webp), serve directly from frontend
+  if (clean.startsWith('/demo issues/') || clean.startsWith('/demo%20issues/') || clean.startsWith('/bento/') || clean.startsWith('/nav/')) {
+    return clean;
+  }
+
   return BASE_URL ? `${BASE_URL}${clean}` : clean;
 }
 
