@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Profile, UserRole } from '../types/incident';
+import { BASE_URL } from '../services/api';
 
 interface AuthContextType {
   user: Profile | null;
@@ -23,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const storedToken = localStorage.getItem('civicfix_token');
       if (storedToken) {
         try {
-          const res = await fetch('/api/v1/auth/me', {
+          const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
             headers: { Authorization: `Bearer ${storedToken}` },
           });
           if (res.ok) {

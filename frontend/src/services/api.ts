@@ -1,6 +1,9 @@
 import type { Incident, Profile, TriageResult } from '../types/incident';
 
-const API_BASE = '/api/v1/complaints';
+const RAW_API_URL = import.meta.env.VITE_API_URL || '';
+export const BASE_URL = RAW_API_URL.replace(/\/+$/, '');
+const API_BASE = `${BASE_URL}/api/v1/complaints`;
+const AUTH_BASE = `${BASE_URL}/api/v1/auth`;
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('civicfix_token');
@@ -17,7 +20,7 @@ export function formatImageUrl(url: string | null | undefined): string {
   if (!clean.startsWith('/')) {
     clean = '/' + clean;
   }
-  return clean;
+  return BASE_URL ? `${BASE_URL}${clean}` : clean;
 }
 
 // In-memory query cache for instant page switching & low device network overhead
@@ -42,8 +45,7 @@ export async function fetchIncidents(status?: string, category?: string, forceRe
   }
 
   const res = await fetch(`${API_BASE}/incidents?${params.toString()}`);
-  if (!res.ok) throw new Error('Failed to load incidents');
-  const data: Incident[] = await res.json();
+  const data = await handleApiResponse<Incident[]>(res, 'Failed to load incidents');
   cache.set(cacheKey, { data, timestamp: Date.now() });
   return data;
 }
@@ -59,12 +61,15 @@ async function handleApiResponse<T>(res: Response, fallbackError: string): Promi
       data = null;
     }
   } else {
-    const text = await res.text();
-    data = { detail: text || fallbackError };
+    const text = await res.text().catch(() => '');
+    if (!res.ok) {
+      throw new Error(text || fallbackError);
+    }
+    return text as unknown as T;
   }
 
   if (!res.ok) {
-    const errorMsg = data?.detail || fallbackError;
+    const errorMsg = data?.detail || data?.message || fallbackError;
     throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
   }
 
@@ -130,14 +135,12 @@ export async function submitCitizenVote(
 
 // Authentication API
 export async function loginUser(email: string, password: string): Promise<{ access_token: string; user: Profile }> {
-  const res = await fetch('/api/v1/auth/login', {
+  const res = await fetch(`${AUTH_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Login failed');
-  return data;
+  return handleApiResponse<{ access_token: string; user: Profile }>(res, 'Login failed');
 }
 
 export async function registerCitizen(payload: {
@@ -146,14 +149,12 @@ export async function registerCitizen(payload: {
   password: string;
   phone?: string;
 }): Promise<{ access_token: string; user: Profile }> {
-  const res = await fetch('/api/v1/auth/register-citizen', {
+  const res = await fetch(`${AUTH_BASE}/register-citizen`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Registration failed');
-  return data;
+  return handleApiResponse<{ access_token: string; user: Profile }>(res, 'Registration failed');
 }
 
 export async function registerOfficial(payload: {
@@ -164,12 +165,10 @@ export async function registerOfficial(payload: {
   official_badge_id: string;
   phone?: string;
 }): Promise<{ access_token: string; user: Profile }> {
-  const res = await fetch('/api/v1/auth/register-official', {
+  const res = await fetch(`${AUTH_BASE}/register-official`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Official registration failed');
-  return data;
+  return handleApiResponse<{ access_token: string; user: Profile }>(res, 'Official registration failed');
 }
