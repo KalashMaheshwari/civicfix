@@ -37,14 +37,25 @@ class CivicAIDetector:
 
     def __init__(self):
         self.model_name = settings.CLIP_MODEL_NAME
-        logger.info(f"Loading CLIP Zero-Shot Classifier & Vision Model ({self.model_name})...")
-        self.classifier = pipeline(
-            "zero-shot-image-classification",
-            model=self.model_name
-        )
-        self.similarity_model = CLIPModel.from_pretrained(self.model_name)
-        self.similarity_processor = CLIPProcessor.from_pretrained(self.model_name)
-        logger.info("CLIP models loaded successfully.")
+        logger.info(f"Loading lightweight CLIP Vision & Text Model ({self.model_name})...")
+        
+        # Disable gradients globally to save memory
+        torch.set_grad_enabled(False)
+        
+        # Load single model instance in eval mode
+        self.model = CLIPModel.from_pretrained(self.model_name)
+        self.model.eval()
+        self.processor = CLIPProcessor.from_pretrained(self.model_name)
+        
+        # Pre-compute and cache text embeddings for all categories
+        self.candidate_labels = list(CATEGORIES.values())
+        text_inputs = self.processor(text=self.candidate_labels, return_tensors="pt", padding=True)
+        text_outputs = self.model.text_model(**text_inputs)
+        pooled_text = text_outputs.pooler_output
+        projected_text = self.model.text_projection(pooled_text)
+        self.text_features = projected_text / projected_text.norm(dim=-1, keepdim=True)
+        
+        logger.info("CLIP models loaded and text features cached successfully.")
 
     @classmethod
     def get_instance(cls) -> "CivicAIDetector":
@@ -56,28 +67,36 @@ class CivicAIDetector:
         """
         Extracts a 512-dimensional normalized vector embedding from an image.
         """
-        inputs = self.similarity_processor(images=image, return_tensors="pt")
+        inputs = self.processor(images=image, return_tensors="pt")
         with torch.no_grad():
-            vision_outputs = self.similarity_model.vision_model(**inputs)
-            pooled = vision_outputs.pooler_output
-            projected = self.similarity_model.visual_projection(pooled)
-            embedding = projected / projected.norm(dim=-1, keepdim=True)
+            vision_outputs = self.model.vision_model(**inputs)
+            pooled_img = vision_outputs.pooler_output
+            projected_img = self.model.visual_projection(pooled_img)
+            embedding = projected_img / projected_img.norm(dim=-1, keepdim=True)
         return embedding.squeeze().tolist()
 
     def analyze_image(self, image: Image.Image) -> Dict[str, Any]:
         """
-        Performs zero-shot classification and embedding extraction.
+        Performs zero-shot classification and embedding extraction with cached embeddings.
         """
-        labels = list(CATEGORIES.values())
-        results = self.classifier(image, candidate_labels=labels)
-
-        top_result = results[0]
-        second_result = results[1] if len(results) > 1 else {"score": 0.0}
-
-        top_label = top_result["label"]
-        top_confidence = float(top_result["score"])
-        second_confidence = float(second_result["score"])
-        margin = top_confidence - second_confidence
+        inputs = self.processor(images=image, return_tensors="pt")
+        with torch.no_grad():
+            vision_outputs = self.model.vision_model(**inputs)
+            pooled_img = vision_outputs.pooler_output
+            projected_img = self.model.visual_projection(pooled_img)
+            image_features = projected_img / projected_img.norm(dim=-1, keepdim=True)
+            
+            # Compute cosine similarity with cached text features
+            similarity = (image_features @ self.text_features.T).squeeze(0)
+            probs = torch.softmax(similarity * 100.0, dim=-1)
+            
+            top_probs, top_indices = torch.topk(probs, k=min(2, len(self.candidate_labels)))
+            
+            top_confidence = float(top_probs[0].item())
+            second_confidence = float(top_probs[1].item()) if len(top_probs) > 1 else 0.0
+            margin = top_confidence - second_confidence
+            
+            top_label = self.candidate_labels[top_indices[0].item()]
 
         # Map prompt back to category key
         category = "other"

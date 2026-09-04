@@ -68,11 +68,16 @@ export const BentoCategoryGrid: React.FC = () => {
             onClick={() => navigate('/citizen/new', { state: { preselectCategory: cat.id } })}
           >
             <div className="bento-icon-container">
-              <img 
-                src={cat.iconSrc} 
-                alt={cat.title} 
-                className="bento-icon-img"
-              />
+              <picture>
+                <source srcSet={cat.iconSrc.replace(/\.(png|jpg)$/, '.webp')} type="image/webp" />
+                <img 
+                  src={cat.iconSrc} 
+                  alt={cat.title} 
+                  className="bento-icon-img"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
             </div>
             
             <div className="bento-text-content">
