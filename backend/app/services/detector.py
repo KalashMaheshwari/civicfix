@@ -1,8 +1,6 @@
 import logging
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Optional
 from PIL import Image
-import torch
-from transformers import pipeline, CLIPProcessor, CLIPModel
 from backend.app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -40,13 +38,18 @@ class CivicAIDetector:
         self.model = None
         self.processor = None
         self.text_features = None
+        self.torch_module = None
         self.candidate_labels = list(CATEGORIES.values())
-        logger.info("CivicAIDetector initialized (lazy model loading enabled).")
+        logger.info("CivicAIDetector initialized (zero-overhead startup).")
 
     def _ensure_loaded(self):
         if self.model is None:
-            logger.info(f"Loading lightweight CLIP Vision & Text Model ({self.model_name})...")
+            logger.info(f"Importing and loading lightweight CLIP Vision & Text Model ({self.model_name})...")
             try:
+                import torch
+                from transformers import CLIPProcessor, CLIPModel
+                self.torch_module = torch
+
                 # Disable gradients globally to save memory
                 torch.set_grad_enabled(False)
                 self.model = CLIPModel.from_pretrained(self.model_name)
@@ -61,8 +64,8 @@ class CivicAIDetector:
                 self.text_features = projected_text / projected_text.norm(dim=-1, keepdim=True)
                 logger.info("CLIP models loaded and text features cached successfully.")
             except Exception as e:
-                logger.error(f"Error loading CLIP model: {e}")
-                self.model = False  # Flag to use heuristic fallback
+                logger.error(f"Error loading CLIP model (falling back to lightweight heuristic): {e}")
+                self.model = False  # Fallback to heuristic classification
 
     @classmethod
     def get_instance(cls) -> "CivicAIDetector":
@@ -75,9 +78,9 @@ class CivicAIDetector:
         Extracts a 512-dimensional normalized vector embedding from an image.
         """
         self._ensure_loaded()
-        if self.model and self.processor:
+        if self.model and self.processor and self.torch_module:
             inputs = self.processor(images=image, return_tensors="pt")
-            with torch.no_grad():
+            with self.torch_module.no_grad():
                 vision_outputs = self.model.vision_model(**inputs)
                 pooled_img = vision_outputs.pooler_output
                 projected_img = self.model.visual_projection(pooled_img)
@@ -95,9 +98,9 @@ class CivicAIDetector:
         Performs zero-shot classification and embedding extraction with cached embeddings.
         """
         self._ensure_loaded()
-        if self.model and self.processor and self.text_features is not None:
+        if self.model and self.processor and self.text_features is not None and self.torch_module:
             inputs = self.processor(images=image, return_tensors="pt")
-            with torch.no_grad():
+            with self.torch_module.no_grad():
                 vision_outputs = self.model.vision_model(**inputs)
                 pooled_img = vision_outputs.pooler_output
                 projected_img = self.model.visual_projection(pooled_img)
@@ -105,9 +108,9 @@ class CivicAIDetector:
                 
                 # Compute cosine similarity with cached text features
                 similarity = (image_features @ self.text_features.T).squeeze(0)
-                probs = torch.softmax(similarity * 100.0, dim=-1)
+                probs = self.torch_module.softmax(similarity * 100.0, dim=-1)
                 
-                top_probs, top_indices = torch.topk(probs, k=min(2, len(self.candidate_labels)))
+                top_probs, top_indices = self.torch_module.topk(probs, k=min(2, len(self.candidate_labels)))
                 
                 top_confidence = float(top_probs[0].item())
                 second_confidence = float(top_probs[1].item()) if len(top_probs) > 1 else 0.0
