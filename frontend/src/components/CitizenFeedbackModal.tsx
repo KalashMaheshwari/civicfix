@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Camera, X, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
 import { compressImage } from '../utils/imageCompressor';
+import { formatErrorMessage } from '../utils/errors';
 
 interface CitizenFeedbackModalProps {
   incidentId: string | null;
@@ -45,7 +46,7 @@ export const CitizenFeedbackModal: React.FC<CitizenFeedbackModalProps> = ({
       await onSubmitFeedback(incidentId, false, comment, selectedFile);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to submit dispute audit');
+      setError(formatErrorMessage(err, 'Failed to submit dispute audit. Please try again.'));
     } finally {
       setLoading(false);
     }

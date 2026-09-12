@@ -41,10 +41,10 @@ async def report_complaint(
     try:
         image_bytes = await file.read()
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid or corrupted image file: {str(e)}"
+            detail="Unable to read the uploaded image. Please provide a valid JPEG, PNG, or WEBP image."
         )
 
     citizen_id = str(current_user["id"])
@@ -123,10 +123,10 @@ async def resolve_incident_by_govt(
 
     try:
         image_bytes = await file.read()
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid image file: {str(e)}"
+            detail="Unable to read the uploaded repair photograph. Please provide a valid JPEG, PNG, or WEBP image."
         )
 
     resolution_image_url = TriageService.upload_image(image_bytes, file.filename or "resolution.jpg")
@@ -184,10 +184,10 @@ async def vote_incident_feedback(
         try:
             image_bytes = await file.read()
             proof_image_url = TriageService.upload_image(image_bytes, file.filename or "proof.jpg")
-        except Exception as e:
+        except Exception:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid image file: {str(e)}"
+                detail="Unable to read the uploaded proof photograph. Please provide a valid JPEG, PNG, or WEBP image."
             )
 
     result = DirectDB.record_citizen_feedback(

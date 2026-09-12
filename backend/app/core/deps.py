@@ -13,7 +13,7 @@ async def get_current_user(
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required. Please provide a valid Bearer token.",
+            detail="Authentication required. Please sign in to continue.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -22,7 +22,7 @@ async def get_current_user(
     if not payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired access token.",
+            detail="Your session has expired. Please sign in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -30,7 +30,7 @@ async def get_current_user(
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Malformed token payload.",
+            detail="Invalid authentication session. Please sign in again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -54,9 +54,10 @@ def require_roles(allowed_roles: List[str]):
     async def role_checker(user: dict = Depends(get_current_user)) -> dict:
         user_role = user.get("role", "citizen")
         if user_role not in allowed_roles:
+            role_names = ", ".join(r.capitalize() for r in allowed_roles)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Access denied. This action requires one of the following roles: {', '.join(allowed_roles)}."
+                detail=f"Access denied. This action requires {role_names} privileges."
             )
         return user
 

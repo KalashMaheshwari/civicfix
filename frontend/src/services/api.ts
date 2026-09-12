@@ -1,4 +1,5 @@
 import type { Incident, Profile, TriageResult } from '../types/incident';
+import { formatErrorMessage } from '../utils/errors';
 
 const RAW_API_URL = import.meta.env.VITE_API_URL || '';
 export const BASE_URL = RAW_API_URL.replace(/\/+$/, '');
@@ -69,14 +70,15 @@ async function handleApiResponse<T>(res: Response, fallbackError: string): Promi
   } else {
     const text = await res.text().catch(() => '');
     if (!res.ok) {
-      throw new Error(text || fallbackError);
+      throw new Error(formatErrorMessage(text, fallbackError));
     }
     return text as unknown as T;
   }
 
   if (!res.ok) {
-    const errorMsg = data?.detail || data?.message || fallbackError;
-    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+    const errorData = data?.detail ?? data?.message ?? data?.error ?? data;
+    const cleanError = formatErrorMessage(errorData, fallbackError);
+    throw new Error(cleanError);
   }
 
   return data as T;

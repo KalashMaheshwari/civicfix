@@ -15,6 +15,7 @@ import type { Incident } from '../types/incident';
 import { fetchIncidents } from '../services/api';
 import { LayoutGrid, List, Filter, HardHat, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { formatErrorMessage } from '../utils/errors';
 
 export const GovDashboardPage: React.FC = () => {
   const { t } = useLanguage();
@@ -60,8 +61,8 @@ export const GovDashboardPage: React.FC = () => {
     try {
       const data = await fetchIncidents();
       setIncidents(data);
-    } catch {
-      addToast('Failed to load incident records from municipal database', 'error');
+    } catch (err: any) {
+      addToast(formatErrorMessage(err, 'Failed to load incident records from municipal database'), 'error');
     } finally {
       setIsLoading(false);
     }

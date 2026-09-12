@@ -3,6 +3,7 @@ import { Camera, Navigation, Loader2, X, MapPin, FileCheck, ShieldCheck } from '
 import { submitComplaintReport } from '../services/api';
 import { LiveCameraCapture } from './LiveCameraCapture';
 import { reverseGeocode } from '../utils/geocoding';
+import { formatErrorMessage } from '../utils/errors';
 
 interface TicketFilingModalProps {
   citizenId: string;
@@ -80,7 +81,7 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
         onClose();
       }
     } catch (err: any) {
-      onError(err.message || 'Failed to lodge report');
+      onError(formatErrorMessage(err, 'Failed to lodge report. Please check your submission.'));
     } finally {
       setLoading(false);
     }

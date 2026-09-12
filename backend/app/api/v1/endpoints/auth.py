@@ -1,6 +1,7 @@
+import re
 from typing import Optional
 from fastapi import APIRouter, HTTPException, status, Depends
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from backend.app.core.security import hash_password, verify_password, create_access_token
 from backend.app.core.deps import get_current_user
 from backend.app.db.postgres_direct import DirectDB
@@ -9,24 +10,67 @@ from backend.app.schemas.complaint import ProfileResponse
 router = APIRouter()
 
 
+def validate_strong_password(value: str) -> str:
+    if len(value) < 8:
+        raise ValueError("Password must be at least 8 characters long.")
+    if len(value) > 128:
+        raise ValueError("Password cannot exceed 128 characters.")
+    if not re.search(r'[A-Z]', value):
+        raise ValueError("Password must contain at least one uppercase letter (A-Z).")
+    if not re.search(r'[a-z]', value):
+        raise ValueError("Password must contain at least one lowercase letter (a-z).")
+    if not re.search(r'\d', value):
+        raise ValueError("Password must contain at least one number (0-9).")
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>\-_=+/\\~`]', value):
+        raise ValueError("Password must contain at least one special character (e.g. !@#$%^&*).")
+    return value
+
+
+def validate_email_address(value: str) -> str:
+    cleaned = value.strip()
+    if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', cleaned):
+        raise ValueError("Please enter a valid email address.")
+    return cleaned
+
+
 class CitizenRegisterRequest(BaseModel):
-    full_name: str = Field(..., min_length=2)
-    email: str = Field(..., min_length=5)
-    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: str = Field(..., min_length=5, max_length=120)
+    password: str = Field(..., min_length=8, max_length=128)
     phone: Optional[str] = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        return validate_email_address(v)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        return validate_strong_password(v)
 
 
 class OfficialRegisterRequest(BaseModel):
-    full_name: str = Field(..., min_length=2)
-    email: str = Field(..., min_length=5)
-    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    email: str = Field(..., min_length=5, max_length=120)
+    password: str = Field(..., min_length=8, max_length=128)
     department: str = Field(..., description="e.g. Roads & Works, Sanitation, Electricity")
     official_badge_id: str = Field(..., description="Official Government Badge / Employee ID")
     phone: Optional[str] = None
 
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        return validate_email_address(v)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        return validate_strong_password(v)
+
 
 class LoginRequest(BaseModel):
-    email: str = Field(..., min_length=5)
+    email: str = Field(..., min_length=3)
     password: str
 
 

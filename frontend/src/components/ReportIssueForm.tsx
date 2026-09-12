@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Camera, Navigation, Send, Loader2 } from 'lucide-react';
 import { submitComplaintReport } from '../services/api';
 import { compressImage } from '../utils/imageCompressor';
+import { formatErrorMessage } from '../utils/errors';
 
 interface ReportIssueFormProps {
   citizenId: string;
@@ -80,7 +81,7 @@ export const ReportIssueForm: React.FC<ReportIssueFormProps> = ({ citizenId, onS
       setAddress('');
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err: any) {
-      onError(err.message || 'Failed to submit report');
+      onError(formatErrorMessage(err, 'Failed to submit report. Please check your submission.'));
     } finally {
       setLoading(false);
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Camera, X, Loader2, MapPin, ShieldCheck } from 'lucide-react';
 import { submitResolutionProof, formatImageUrl } from '../services/api';
 import { LiveCameraCapture } from './LiveCameraCapture';
+import { formatErrorMessage } from '../utils/errors';
 import type { Incident } from '../types/incident';
 
 interface ResolveModalProps {
@@ -50,7 +51,7 @@ export const ResolveModal: React.FC<ResolveModalProps> = ({
       onSuccess('Repair proof logged! The work order is now routed to Ward-04 citizens for sign-off verification.');
       onClose();
     } catch (err: any) {
-      onError(err.message || 'Failed to submit repair proof');
+      onError(formatErrorMessage(err, 'Failed to submit repair proof. Please try again.'));
     } finally {
       setLoading(false);
     }

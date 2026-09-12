@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { formatErrorMessage } from '../utils/errors';
 
 export interface ToastMessage {
   id: string;
@@ -40,7 +41,7 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
         <div key={t.id} className={`toast-notification toast-${t.type || 'info'}`}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
             <span style={{ flexShrink: 0 }}>{getIcon(t.type)}</span>
-            <span style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.35 }}>{t.text}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.35 }}>{formatErrorMessage(t.text)}</span>
           </div>
           <button
             onClick={() => onDismiss(t.id)}

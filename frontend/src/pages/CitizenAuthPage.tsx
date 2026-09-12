@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Loader2, Mail, Lock, User, Phone, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Loader2, Mail, Lock, User, Phone, Eye, EyeOff, ShieldCheck, Check } from 'lucide-react';
 import { loginUser, registerCitizen } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { formatErrorMessage } from '../utils/errors';
+import { validatePassword } from '../utils/validation';
 
 export const CitizenAuthPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +19,8 @@ export const CitizenAuthPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const pwdValidation = useMemo(() => validatePassword(password), [password]);
+
   const handleFillDemo = () => {
     setEmail('priya.singh@gmail.com');
     setPassword('password123');
@@ -26,11 +30,34 @@ export const CitizenAuthPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (isLogin) {
+      if (!password) {
+        setError('Please enter your password.');
+        return;
+      }
+    } else {
+      if (!fullName || fullName.trim().length < 2) {
+        setError('Please enter your full name (at least 2 characters).');
+        return;
+      }
+      if (!pwdValidation.isValid) {
+        setError(pwdValidation.errorMessage || 'Please create a stronger password according to security requirements.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
       if (isLogin) {
-        const res = await loginUser(email, password);
+        const res = await loginUser(cleanEmail, password);
         if (res.user.role !== 'citizen') {
           throw new Error('This account belongs to the Government portal. Please sign in via the MCD Portal.');
         }
@@ -38,16 +65,16 @@ export const CitizenAuthPage: React.FC = () => {
         navigate('/citizen');
       } else {
         const res = await registerCitizen({
-          full_name: fullName,
-          email,
-          password,
-          phone: phone || undefined,
+          full_name: fullName.trim(),
+          email: cleanEmail,
+          password: password,
+          phone: phone.trim() || undefined,
         });
         login(res.access_token, res.user);
         navigate('/citizen');
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(formatErrorMessage(err, 'Authentication failed. Please verify your credentials.'));
     } finally {
       setLoading(false);
     }
@@ -102,41 +129,141 @@ export const CitizenAuthPage: React.FC = () => {
         <form onSubmit={handleSubmit}>
           {!isLogin && (
             <div className="form-group">
-              <label className="form-label">Full Name</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <label className="form-label" style={{ margin: 0 }}>Full Name</label>
+                <span style={{ fontSize: 11, color: fullName.length >= 2 ? '#10b981' : 'var(--text-muted)' }}>
+                  Min 2 characters
+                </span>
+              </div>
               <div className="input-container">
                 <User className="input-icon-left" size={16} />
-                <input type="text" className="form-input has-icon" placeholder="Priya Sharma" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                <input
+                  type="text"
+                  className="form-input has-icon"
+                  placeholder="e.g. Priya Sharma"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  minLength={2}
+                  maxLength={100}
+                  required
+                />
               </div>
             </div>
           )}
 
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <label className="form-label" style={{ margin: 0 }}>Email Address</label>
+              {!isLogin && (
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  Standard email format
+                </span>
+              )}
+            </div>
             <div className="input-container">
               <Mail className="input-icon-left" size={16} />
-              <input type="email" className="form-input has-icon" placeholder="citizen@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input
+                type="email"
+                className="form-input has-icon"
+                placeholder="citizen@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
           </div>
 
           {!isLogin && (
             <div className="form-group">
-              <label className="form-label">Mobile Number (SMS Updates)</label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <label className="form-label" style={{ margin: 0 }}>Mobile Number <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional)</span></label>
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  For SMS ticket alerts
+                </span>
+              </div>
               <div className="input-container">
                 <Phone className="input-icon-left" size={16} />
-                <input type="tel" className="form-input has-icon" placeholder="+91 98765 43210" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                <input
+                  type="tel"
+                  className="form-input has-icon"
+                  placeholder="+91 98765 43210"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
               </div>
             </div>
           )}
 
-          <div className="form-group">
-            <label className="form-label">Password</label>
+          <div className="form-group" style={{ marginBottom: !isLogin ? 12 : 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+              <label className="form-label" style={{ margin: 0 }}>Password</label>
+              {!isLogin && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: password ? pwdValidation.strengthColor : 'var(--text-muted)' }}>
+                  {password ? `${pwdValidation.strengthLabel} Security` : '8+ chars required'}
+                </span>
+              )}
+            </div>
             <div className="input-container">
               <Lock className="input-icon-left" size={16} />
-              <input type={showPassword ? 'text' : 'password'} className="form-input has-icon" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="form-input has-icon"
+                placeholder={isLogin ? '••••••••' : 'Enter a strong password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={isLogin ? undefined : 8}
+                maxLength={128}
+                required
+              />
               <button type="button" className="input-icon-btn" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+
+            {/* Live Security Strength Bar & Requirements Checklist on Registration */}
+            {!isLogin && (
+              <div style={{ marginTop: 8, padding: '10px 12px', background: 'var(--bg-subtle, rgba(15, 23, 42, 0.03))', borderRadius: 'var(--radius-xs, 6px)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+                {/* Progress Bar */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Password Requirements:
+                  </span>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: password ? pwdValidation.strengthColor : 'var(--text-muted)' }}>
+                    {password ? `${pwdValidation.score}/5 Rules Met` : 'Required Rules'}
+                  </span>
+                </div>
+                <div style={{ height: 4, width: '100%', background: 'var(--border-subtle, #e2e8f0)', borderRadius: 2, overflow: 'hidden', marginBottom: 8 }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${password ? (pwdValidation.score / 5) * 100 : 0}%`,
+                      background: pwdValidation.strengthColor,
+                      transition: 'width 0.3s ease, background 0.3s ease',
+                    }}
+                  />
+                </div>
+
+                {/* Rule checklist */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', fontSize: 11.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: pwdValidation.checks.minLength ? '#10b981' : 'var(--text-muted, #94a3b8)', transition: 'color 0.2s ease' }}>
+                    <Check size={12} strokeWidth={pwdValidation.checks.minLength ? 3 : 1.5} color={pwdValidation.checks.minLength ? '#10b981' : '#94a3b8'} />
+                    <span>8+ characters</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: (pwdValidation.checks.hasUppercase && pwdValidation.checks.hasLowercase) ? '#10b981' : 'var(--text-muted, #94a3b8)', transition: 'color 0.2s ease' }}>
+                    <Check size={12} strokeWidth={(pwdValidation.checks.hasUppercase && pwdValidation.checks.hasLowercase) ? 3 : 1.5} color={(pwdValidation.checks.hasUppercase && pwdValidation.checks.hasLowercase) ? '#10b981' : '#94a3b8'} />
+                    <span>Upper & Lowercase</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: pwdValidation.checks.hasNumber ? '#10b981' : 'var(--text-muted, #94a3b8)', transition: 'color 0.2s ease' }}>
+                    <Check size={12} strokeWidth={pwdValidation.checks.hasNumber ? 3 : 1.5} color={pwdValidation.checks.hasNumber ? '#10b981' : '#94a3b8'} />
+                    <span>At least 1 number (0-9)</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: pwdValidation.checks.hasSpecial ? '#10b981' : 'var(--text-muted, #94a3b8)', transition: 'color 0.2s ease' }}>
+                    <Check size={12} strokeWidth={pwdValidation.checks.hasSpecial ? 3 : 1.5} color={pwdValidation.checks.hasSpecial ? '#10b981' : '#94a3b8'} />
+                    <span>Special symbol (!@#$)</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%', marginTop: 6 }} disabled={loading}>

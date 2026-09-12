@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, Loader2, Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react';
 import { loginUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { formatErrorMessage } from '../utils/errors';
 
 export const GovAuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -22,17 +23,29 @@ export const GovAuthPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setError('Please enter a valid government email address.');
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await loginUser(email, password);
+      const res = await loginUser(cleanEmail, password);
       if (res.user.role === 'citizen') {
         throw new Error('This account belongs to a citizen. Please sign in via the Citizen Portal.');
       }
       login(res.access_token, res.user);
       navigate('/gov/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      setError(formatErrorMessage(err, 'Authentication failed. Please verify your official credentials.'));
     } finally {
       setLoading(false);
     }

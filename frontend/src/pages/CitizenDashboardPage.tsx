@@ -17,6 +17,7 @@ import { MobileDock } from '../components/MobileDock';
 import { CommandPalette } from '../components/CommandPalette';
 import { LayoutGrid, List } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { formatErrorMessage } from '../utils/errors';
 
 export const CitizenDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -63,8 +64,8 @@ export const CitizenDashboardPage: React.FC = () => {
     try {
       const data = await fetchIncidents();
       setIncidents(data);
-    } catch {
-      addToast('Unable to load reports from municipal ledger', 'error');
+    } catch (err: any) {
+      addToast(formatErrorMessage(err, 'Unable to load reports from municipal ledger'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +85,7 @@ export const CitizenDashboardPage: React.FC = () => {
       addToast('Sign-off recorded! Thank you for verifying municipal repairs.', 'success');
       loadData();
     } catch (err: any) {
-      addToast(err.message || 'Failed to submit verification', 'error');
+      addToast(formatErrorMessage(err, 'Failed to submit verification'), 'error');
     }
   };
 
@@ -98,7 +99,7 @@ export const CitizenDashboardPage: React.FC = () => {
       addToast('Dispute logged with evidence. The ticket has been escalated to MCD Chief Engineer.', 'success');
       loadData();
     } catch (err: any) {
-      addToast(err.message || 'Failed to submit dispute', 'error');
+      addToast(formatErrorMessage(err, 'Failed to submit dispute'), 'error');
       throw err;
     }
   };
