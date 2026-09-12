@@ -16,9 +16,10 @@ interface NotificationItem {
 interface NotificationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  isMobileDock?: boolean;
 }
 
-export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, onClose }) => {
+export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, onClose, isMobileDock = false }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -104,27 +105,62 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
-    <div
-      ref={dropdownRef}
-      style={{
-        position: 'absolute',
-        top: 'calc(100% + 12px)',
-        right: 18,
-        width: 380,
-        maxWidth: 'calc(100vw - 32px)',
-        background: 'rgba(255, 255, 255, 0.88)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderRadius: 18,
-        border: '1px solid rgba(226, 232, 240, 0.8)',
-        boxShadow:
-          '0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset, 0 8px 16px -6px rgba(0, 0, 0, 0.05)',
-        zIndex: 99999,
-        overflow: 'hidden',
-        animation: 'appleDropdownScale 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
-        transformOrigin: 'top right',
-      }}
-    >
+    <>
+      {isMobileDock && (
+        <div
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.45)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            zIndex: 99998,
+          }}
+        />
+      )}
+      <div
+        ref={dropdownRef}
+        style={
+          isMobileDock
+            ? {
+                position: 'fixed',
+                bottom: 'calc(66px + env(safe-area-inset-bottom, 0px))',
+                left: 14,
+                right: 14,
+                maxWidth: 440,
+                margin: '0 auto',
+                maxHeight: '75vh',
+                background: '#ffffff',
+                borderRadius: 20,
+                border: '1px solid var(--border-default)',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                zIndex: 99999,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                animation: 'appleDropdownScale 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              }
+            : {
+                position: 'absolute',
+                top: 'calc(100% + 12px)',
+                right: 18,
+                width: 380,
+                maxWidth: 'calc(100vw - 32px)',
+                background: 'rgba(255, 255, 255, 0.88)',
+                backdropFilter: 'blur(24px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                borderRadius: 18,
+                border: '1px solid rgba(226, 232, 240, 0.8)',
+                boxShadow:
+                  '0 20px 40px -15px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.6) inset, 0 8px 16px -6px rgba(0, 0, 0, 0.05)',
+                zIndex: 99999,
+                overflow: 'hidden',
+                animation: 'appleDropdownScale 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+                transformOrigin: 'top right',
+              }
+        }
+      >
       {/* Premium Apple-style Glass Header */}
       <div
         style={{
@@ -338,6 +374,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
           );
         })}
       </div>
-    </div>
+      </div>
+    </>
   );
 };

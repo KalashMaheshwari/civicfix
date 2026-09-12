@@ -18,12 +18,15 @@ import {
   Award,
   TrendingUp,
   Clock,
+  Globe,
 } from 'lucide-react';
 import { calculateLevel, computeBadges, LEVEL_TIERS } from '../utils/gamification';
 import { PointsIcon } from '../components/StarIcon';
+import { useLanguage } from '../context/LanguageContext';
 
 export const CitizenProfilePage: React.FC = () => {
   const { user, logout, refreshUser } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -843,6 +846,58 @@ export const CitizenProfilePage: React.FC = () => {
                   <div style={{ fontSize: 10, color: '#64748B', fontWeight: 700, textTransform: 'uppercase' }}>Monitored Adjoining Wards</div>
                   <div style={{ fontSize: 12.5, color: '#0F172A', marginTop: 1 }}>Ward-12 (Central Commercial), Ward-02 (East)</div>
                 </div>
+              </div>
+            </div>
+ 
+            {/* Language Preferences */}
+            <div className="card" style={{ background: '#FFFFFF', border: '1px solid #D0E0EF', borderRadius: 12, padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid #E2E8F0' }}>
+                <Globe size={18} color="#0284C7" />
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: '#0F172A', margin: 0 }}>Application Language / भाषा</h3>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${language === 'en' ? '#0284C7' : '#E2E8F0'}`,
+                    background: language === 'en' ? '#EFF6FF' : '#F8FAFC',
+                    color: language === 'en' ? '#0284C7' : '#0F172A',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>English</span>
+                  {language === 'en' && <Check size={14} strokeWidth={2.5} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('hi')}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${language === 'hi' ? '#0284C7' : '#E2E8F0'}`,
+                    background: language === 'hi' ? '#EFF6FF' : '#F8FAFC',
+                    color: language === 'hi' ? '#0284C7' : '#0F172A',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>हिन्दी</span>
+                  {language === 'hi' && <Check size={14} strokeWidth={2.5} />}
+                </button>
               </div>
             </div>
 

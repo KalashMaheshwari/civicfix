@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { AdaptiveHeader } from '../components/AdaptiveHeader';
 import { DesktopRail } from '../components/DesktopRail';
 import { MobileDock } from '../components/MobileDock';
-import { ShieldCheck, HardHat, LogOut, Check } from 'lucide-react';
+import { ShieldCheck, HardHat, LogOut, Check, Globe } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const GovProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -95,6 +97,64 @@ export const GovProfilePage: React.FC = () => {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Operational Department</div>
                   <div style={{ fontSize: 13, color: 'var(--text-primary)', marginTop: 2 }}>Public Works, Drainage & Roads Division</div>
                 </div>
+              </div>
+            </div>
+
+            {/* Language Selection */}
+            <div className="card">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--primary-light, #EFF6FF)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Globe size={18} color="var(--primary, #0284c7)" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: 14.5, fontWeight: 700 }}>Application Language / भाषा</h3>
+                  <div style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>Official interface localization</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${language === 'en' ? 'var(--primary, #0284c7)' : 'var(--border-default)'}`,
+                    background: language === 'en' ? 'var(--primary-light, #EFF6FF)' : 'var(--bg-subtle)',
+                    color: language === 'en' ? 'var(--primary, #0284c7)' : 'var(--text-primary)',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>English</span>
+                  {language === 'en' && <Check size={14} strokeWidth={2.5} />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('hi')}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: `1.5px solid ${language === 'hi' ? 'var(--primary, #0284c7)' : 'var(--border-default)'}`,
+                    background: language === 'hi' ? 'var(--primary-light, #EFF6FF)' : 'var(--bg-subtle)',
+                    color: language === 'hi' ? 'var(--primary, #0284c7)' : 'var(--text-primary)',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>हिन्दी</span>
+                  {language === 'hi' && <Check size={14} strokeWidth={2.5} />}
+                </button>
               </div>
             </div>
 
