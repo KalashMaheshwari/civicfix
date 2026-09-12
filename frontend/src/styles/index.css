@@ -839,6 +839,80 @@ h1, h2, h3, h4, h5, h6 {
   border: 1.5px solid #FFFFFF;
 }
 
+/* Hero Central Action Button Highlight */
+.dock-tab-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-decoration: none;
+  flex: 1.15;
+}
+
+.dock-tab-hero::after {
+  display: none !important;
+}
+
+.dock-hero-pod {
+  width: 44px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+  border: 1.5px solid #60A5FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 2px 8px rgba(2, 132, 199, 0.22),
+    0 0 0 2px rgba(2, 132, 199, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(-2px);
+}
+
+.dock-hero-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.12));
+  transition: transform var(--transition-fast);
+}
+
+.dock-hero-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #0284C7;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.dock-tab-hero:hover .dock-hero-pod,
+.dock-tab-hero.active .dock-hero-pod {
+  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  border-color: #0284C7;
+  box-shadow: 
+    0 4px 14px rgba(2, 132, 199, 0.38),
+    0 0 0 3px rgba(2, 132, 199, 0.18);
+  transform: translateY(-4px) scale(1.05);
+}
+
+.dock-tab-hero:hover .dock-hero-icon,
+.dock-tab-hero.active .dock-hero-icon {
+  transform: scale(1.1);
+}
+
+.dock-tab-hero:hover .dock-hero-label,
+.dock-tab-hero.active .dock-hero-label {
+  color: #0369A1;
+  font-weight: 800;
+}
+
+.dock-tab-hero:active .dock-hero-pod {
+  transform: translateY(-1px) scale(0.97);
+}
+
 @media (max-width: 1023px) {
   .app-rail {
     display: none !important;

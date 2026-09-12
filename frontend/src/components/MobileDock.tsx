@@ -23,14 +23,26 @@ export const MobileDock: React.FC = () => {
         </NavLink>
 
         {!isOfficial ? (
-          <NavLink to="/citizen/new" className={({ isActive }) => `dock-tab ${isActive ? 'active' : ''}`}>
-            <img src="/nav/new_ticket.png" alt="Report" style={{ width: 22, height: 22, objectFit: 'contain' }} />
-            <span>Report</span>
+          <NavLink
+            to="/citizen/new"
+            className={({ isActive }) => `dock-tab dock-tab-hero ${isActive ? 'active' : ''}`}
+            title="Lodge New Civic Report"
+          >
+            <div className="dock-hero-pod">
+              <img src="/nav/new_ticket.png" alt="New Ticket" className="dock-hero-icon" />
+            </div>
+            <span className="dock-hero-label">New Ticket</span>
           </NavLink>
         ) : (
-          <NavLink to={`${prefix}/analytics`} className={({ isActive }) => `dock-tab ${isActive ? 'active' : ''}`}>
-            <img src="/nav/progress.png" alt="Triage" style={{ width: 22, height: 22, objectFit: 'contain' }} />
-            <span>Triage</span>
+          <NavLink
+            to={`${prefix}/analytics`}
+            className={({ isActive }) => `dock-tab dock-tab-hero ${isActive ? 'active' : ''}`}
+            title="Dispatch & Triage Queue"
+          >
+            <div className="dock-hero-pod">
+              <img src="/nav/progress.png" alt="Triage" className="dock-hero-icon" />
+            </div>
+            <span className="dock-hero-label">Triage</span>
           </NavLink>
         )}
 
