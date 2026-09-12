@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, CheckCircle2, Clock, X, ShieldAlert, ArrowUpRight } from 'lucide-react';
+import { CheckCircle2, Clock, X, ShieldAlert, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -184,7 +184,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({ isOpen, 
               justifyContent: 'center',
             }}
           >
-            <Bell size={14} color="var(--primary, #0284c7)" />
+            <img src="/notif.png" alt="Notifications" style={{ width: 16, height: 16, objectFit: 'contain' }} />
           </div>
           <span style={{ fontSize: 13.5, fontWeight: 700, color: '#0f172a', letterSpacing: '-0.01em' }}>
             Notifications
