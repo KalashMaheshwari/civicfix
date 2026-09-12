@@ -825,6 +825,7 @@ h1, h2, h3, h4, h5, h6 {
   .app-stage {
     margin-left: 0;
     padding-bottom: 70px;
+    padding-top: 10px;
   }
   .mobile-dock {
     display: flex;
@@ -833,33 +834,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0 8px;
   }
   .adaptive-header {
-    padding: 10px 16px;
-    height: auto;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .header-brand {
-    display: flex;
-    flex: 1;
-  }
-  .header-brand-text {
-    display: none;
-  }
-  .header-actions {
-    flex: 1;
-    justify-content: flex-end;
-  }
-  .header-search-slot {
-    order: 3;
-    width: 100%;
-    max-width: 100%;
-  }
-  .apple-search-dropdown {
-    position: fixed;
-    top: 110px;
-    left: 16px;
-    right: 16px;
-    width: auto;
+    display: none !important;
   }
   .stage-container {
     padding: 16px 14px 44px;
@@ -1070,6 +1045,27 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 600px) {
   .bento-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .bento-item {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .bento-icon-container {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  .bento-icon-img {
+    width: 24px;
+    height: 24px;
+  }
+  .bento-title {
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .bento-desc {
+    font-size: 11.5px;
   }
 }
 

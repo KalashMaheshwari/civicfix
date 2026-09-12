@@ -21,9 +21,10 @@ export const MobileDock: React.FC = () => {
       </NavLink>
 
       {!isOfficial && (
-        <button className="dock-fab" onClick={() => navigate('/citizen/new')} title="New Ticket" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <img src="/nav/new_ticket.png" alt="New" style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-        </button>
+        <NavLink to="/citizen/new" className={({ isActive }) => `dock-tab ${isActive ? 'active' : ''}`}>
+          <img src="/nav/new_ticket.png" alt="Report" style={{ width: 20, height: 20, objectFit: 'contain' }} />
+          <span>Report</span>
+        </NavLink>
       )}
 
       {isOfficial && (
