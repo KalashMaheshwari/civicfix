@@ -90,7 +90,7 @@ class TriageService:
         4. Clustering and Priority scoring update
         """
         detector = CivicAIDetector.get_instance()
-        ai_result = detector.analyze_image(image)
+        ai_result = detector.analyze_image(image, description=description)
 
         category = ai_result["category"]
         confidence = ai_result["confidence"]

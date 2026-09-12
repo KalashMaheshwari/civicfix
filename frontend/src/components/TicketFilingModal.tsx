@@ -22,6 +22,8 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
   const [address, setAddress] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [submissionProgress, setSubmissionProgress] = useState<string>('Submitting to Triage...');
+  const [inlineError, setInlineError] = useState<string | null>(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState<boolean>(false);
 
   // Auto-detect GPS coordinates on modal mount
@@ -60,16 +62,30 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
     setSelectedFile(file);
     setPreviewUrl(dataUrl);
     setShowLiveCamera(false);
+    setInlineError(null);
     onSuccess('Live site photograph verified with GPS watermark.');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFile) {
-      onError('Live camera photograph is required to verify site location.');
+      const msg = 'Live camera photograph is required to verify site location.';
+      setInlineError(msg);
+      onError(msg);
       return;
     }
+    setInlineError(null);
     setLoading(true);
+    setSubmissionProgress('Submitting to Triage...');
+
+    const timer1 = setTimeout(() => {
+      setSubmissionProgress('Connecting to Triage Engine...');
+    }, 3500);
+
+    const timer2 = setTimeout(() => {
+      setSubmissionProgress('Waking cloud server (cold start), please wait...');
+    }, 10000);
+
     const formData = new FormData();
     formData.append('file', selectedFile);
     formData.append('latitude', latitude);
@@ -81,14 +97,20 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
     try {
       const res = await submitComplaintReport(formData);
       if (!res.is_civic_issue) {
-        onError('Verification Alert: The uploaded image was not recognized as a municipal hazard. Please capture a clear photograph of the site.');
+        const warning = 'Verification Notice: The uploaded image was not recognized as a civic hazard. Please capture a clear photograph of the site.';
+        setInlineError(warning);
+        onError(warning);
       } else {
         onSuccess(`Ticket lodged successfully! Reference: #CF-${res.incident_id?.substring(0,6).toUpperCase() || 'NEW'}`);
         onClose();
       }
     } catch (err: any) {
-      onError(formatErrorMessage(err, 'Failed to submit report. Please check your connection.'));
+      const cleanErr = formatErrorMessage(err, 'Failed to submit report. Please verify connection and try again.');
+      setInlineError(cleanErr);
+      onError(cleanErr);
     } finally {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
       setLoading(false);
     }
   };
@@ -346,6 +368,25 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
               />
             </div>
 
+            {/* Inline Error Alert */}
+            {inlineError && (
+              <div style={{
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                borderRadius: 8,
+                padding: '10px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                color: '#991B1B',
+                fontSize: 12.5,
+                lineHeight: 1.4,
+              }}>
+                <span style={{ fontWeight: 700 }}>Notice:</span>
+                <span>{inlineError}</span>
+              </div>
+            )}
+
             {/* Modal Actions */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 6 }}>
               <button
@@ -361,10 +402,19 @@ export const TicketFilingModal: React.FC<TicketFilingModalProps> = ({ citizenId,
                 type="submit"
                 className="btn btn-primary"
                 disabled={loading}
-                style={{ borderRadius: 8, fontSize: 13, fontWeight: 700, padding: '9px 20px', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  padding: '9px 20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  opacity: loading ? 0.85 : 1,
+                }}
               >
                 {loading ? <Loader2 className="spin" size={15} /> : <Send size={14} />}
-                <span>{loading ? 'Submitting to Triage...' : 'Dispatch Civic Report'}</span>
+                <span>{loading ? submissionProgress : 'Dispatch Civic Report'}</span>
               </button>
             </div>
           </form>

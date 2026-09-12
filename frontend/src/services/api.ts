@@ -87,14 +87,27 @@ async function handleApiResponse<T>(res: Response, fallbackError: string): Promi
 }
 
 export async function submitComplaintReport(formData: FormData): Promise<TriageResult> {
-  const res = await fetch(`${API_BASE}/report`, {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: formData,
-  });
-  const data = await handleApiResponse<TriageResult>(res, 'Failed to submit report');
-  invalidateIncidentsCache();
-  return data;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45-second timeout
+
+  try {
+    const res = await fetch(`${API_BASE}/report`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: formData,
+      signal: controller.signal,
+    });
+    const data = await handleApiResponse<TriageResult>(res, 'Failed to submit report');
+    invalidateIncidentsCache();
+    return data;
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error('Server took too long to respond. The cloud service may be waking up from sleep; please try submitting once more.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export async function submitResolutionProof(
