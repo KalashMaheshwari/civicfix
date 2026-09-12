@@ -119,12 +119,8 @@ export const LiveCameraCapture: React.FC<LiveCameraCaptureProps> = ({
     ctx.fillText('MCD PUBLIC AUDIT • LIVE EVIDENCE', 46, 36);
 
     // 2. Bottom Forensic Metadata Banner
-    const bannerHeight = 105;
-    const gradient = ctx.createLinearGradient(0, canvas.height - bannerHeight, 0, canvas.height);
-    gradient.addColorStop(0, 'rgba(15, 23, 42, 0.0)');
-    gradient.addColorStop(0.25, 'rgba(15, 23, 42, 0.88)');
-    gradient.addColorStop(1, 'rgba(15, 23, 42, 0.98)');
-    ctx.fillStyle = gradient;
+    const bannerHeight = 90;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
 
     // Green Verification Seal (Left icon block)

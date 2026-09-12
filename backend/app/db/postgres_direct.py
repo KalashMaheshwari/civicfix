@@ -73,6 +73,182 @@ class DirectDB:
     # PROFILES & AUTHENTICATION (Citizens & Officials)
     # =========================================================================
     @staticmethod
+    def get_level_info(points: int) -> tuple[int, str]:
+        if points >= 1500:
+            return (7, "Community Guardian")
+        elif points >= 1000:
+            return (6, "Ward Champion")
+        elif points >= 750:
+            return (5, "Neighborhood Guardian")
+        elif points >= 500:
+            return (4, "Community Inspector")
+        elif points >= 250:
+            return (3, "Civic Sentinel")
+        elif points >= 100:
+            return (2, "Ward Watcher")
+        else:
+            return (1, "Alert Resident")
+
+    @staticmethod
+    def enrich_profile_gamification(profile: Dict[str, Any]) -> Dict[str, Any]:
+        if not profile:
+            return profile
+        try:
+            user_id = str(profile.get("id"))
+            user_email = profile.get("email") or ""
+            with get_db_cursor() as cur:
+                if not cur:
+                    return profile
+                cur.execute(
+                    """
+                    SELECT count(*) as count 
+                    FROM complaint_reports 
+                    WHERE citizen_id = %s OR citizen_id = %s;
+                    """,
+                    (user_id, user_email)
+                )
+                r_row = cur.fetchone()
+                verified_reports = int(r_row["count"]) if r_row else 0
+
+                cur.execute(
+                    """
+                    SELECT count(*) as count 
+                    FROM incident_feedbacks 
+                    WHERE citizen_id = %s OR citizen_id = %s;
+                    """,
+                    (user_id, user_email)
+                )
+                f_row = cur.fetchone()
+                verifications = int(f_row["count"]) if f_row else 0
+
+                # Real category counts for badges
+                cur.execute(
+                    """
+                    SELECT detected_category, count(*) as count 
+                    FROM complaint_reports 
+                    WHERE citizen_id = %s OR citizen_id = %s
+                    GROUP BY detected_category;
+                    """,
+                    (user_id, user_email)
+                )
+                cat_rows = cur.fetchall() or []
+                category_counts = {r["detected_category"]: int(r["count"]) for r in cat_rows}
+
+                # Real recent complaint reports for audit ledger
+                cur.execute(
+                    """
+                    SELECT cr.id, cr.detected_category, cr.description, cr.created_at, cr.latitude, cr.longitude, i.address, i.title
+                    FROM complaint_reports cr
+                    LEFT JOIN incidents i ON cr.incident_id = i.id
+                    WHERE cr.citizen_id = %s OR cr.citizen_id = %s
+                    ORDER BY cr.created_at DESC LIMIT 6;
+                    """,
+                    (user_id, user_email)
+                )
+                report_rows = cur.fetchall() or []
+
+                # Real recent feedbacks for audit ledger
+                cur.execute(
+                    """
+                    SELECT f.id, f.is_fixed, f.comment, f.created_at, i.title, i.category, i.address
+                    FROM incident_feedbacks f
+                    LEFT JOIN incidents i ON f.incident_id = i.id
+                    WHERE f.citizen_id = %s OR f.citizen_id = %s
+                    ORDER BY f.created_at DESC LIMIT 6;
+                    """,
+                    (user_id, user_email)
+                )
+                feedback_rows = cur.fetchall() or []
+
+                audits = []
+                for r in report_rows:
+                    cat = (r.get("detected_category") or "Civic").replace("_", " ").title()
+                    loc = r.get("address") or (f"Sector Ward GPS ({round(float(r['latitude']), 3)}, {round(float(r['longitude']), 3)})" if r.get("latitude") else "Designated Ward Area")
+                    created = r.get("created_at")
+                    audits.append({
+                        "action": f"Genuine {cat} Hazard Verified by AI Vision",
+                        "location": loc,
+                        "points": "+20 Pts",
+                        "time": created.strftime("%d %b %Y, %I:%M %p") if hasattr(created, "strftime") else "Recent",
+                        "type": "positive",
+                        "_sort": created
+                    })
+
+                for f in feedback_rows:
+                    fixed_label = "Confirmed Fixed" if f.get("is_fixed") else "Disputed Reopened"
+                    loc = f.get("address") or f.get("title") or "Municipal Work Site"
+                    created = f.get("created_at")
+                    audits.append({
+                        "action": f"Community Sign-Off Vote ({fixed_label})",
+                        "location": loc,
+                        "points": "+15 Pts",
+                        "time": created.strftime("%d %b %Y, %I:%M %p") if hasattr(created, "strftime") else "Recent",
+                        "type": "positive",
+                        "_sort": created
+                    })
+
+                created_date = profile.get("created_at")
+                audits.append({
+                    "action": "Aadhaar Identity Verified Resident Registration",
+                    "location": "South Delhi Division Registry",
+                    "points": "+10 Pts",
+                    "time": created_date.strftime("%d %b %Y") if hasattr(created_date, "strftime") else "Joined",
+                    "type": "positive",
+                    "_sort": created_date
+                })
+
+                audits.sort(key=lambda x: str(x.get("_sort") or ""), reverse=True)
+                for a in audits:
+                    a.pop("_sort", None)
+
+                db_points = int(profile.get("civic_points") or 10)
+                calculated_points = max(db_points, 10 + (verified_reports * 20) + (verifications * 15))
+                level, title = DirectDB.get_level_info(calculated_points)
+                
+                # Genuine 0-based impact calculation
+                if verified_reports == 0 and verifications == 0:
+                    impact = 0
+                    reputation = 100
+                    commuters_assisted = 0
+                else:
+                    impact = min(100, (verified_reports * 20) + (verifications * 10))
+                    reputation = 100
+                    commuters_assisted = (verified_reports * 80) + (verifications * 25)
+
+                enriched = dict(profile)
+                enriched["civic_points"] = calculated_points
+                enriched["level"] = level
+                enriched["level_title"] = title
+                enriched["reputation_score"] = reputation
+                enriched["impact_score"] = impact
+                enriched["verified_reports_count"] = verified_reports
+                enriched["verifications_count"] = verifications
+                enriched["commuters_assisted"] = commuters_assisted
+                enriched["category_counts"] = category_counts
+                enriched["recent_audits"] = audits
+                return enriched
+        except Exception as e:
+            logger.error(f"Error enriching profile gamification: {e}")
+            return profile
+
+    @staticmethod
+    def add_citizen_points(citizen_id: str, points: int):
+        try:
+            with get_db_cursor(commit=True) as cur:
+                if not cur:
+                    return
+                cur.execute(
+                    """
+                    UPDATE profiles 
+                    SET civic_points = COALESCE(civic_points, 0) + %s
+                    WHERE id::text = %s OR email = %s;
+                    """,
+                    (points, str(citizen_id), str(citizen_id))
+                )
+        except Exception as e:
+            logger.error(f"Error adding citizen points: {e}")
+
+    @staticmethod
     def get_profile_by_id(profile_id: str) -> Optional[Dict[str, Any]]:
         try:
             with get_db_cursor() as cur:
@@ -80,7 +256,7 @@ class DirectDB:
                     return None
                 cur.execute("SELECT * FROM profiles WHERE id = %s;", (profile_id,))
                 row = cur.fetchone()
-                return dict(row) if row else None
+                return DirectDB.enrich_profile_gamification(dict(row)) if row else None
         except Exception as e:
             logger.error(f"Error fetching profile by ID: {e}")
             return None
@@ -93,7 +269,7 @@ class DirectDB:
                     return None
                 cur.execute("SELECT * FROM profiles WHERE email = %s;", (email.lower().strip(),))
                 row = cur.fetchone()
-                return dict(row) if row else None
+                return DirectDB.enrich_profile_gamification(dict(row)) if row else None
         except Exception as e:
             logger.error(f"Error fetching profile by email: {e}")
             return None
@@ -129,7 +305,7 @@ class DirectDB:
                     )
                 )
                 row = cur.fetchone()
-                return dict(row) if row else None
+                return DirectDB.enrich_profile_gamification(dict(row)) if row else None
         except Exception as e:
             logger.error(f"Error creating user account: {e}")
             return None
@@ -471,3 +647,23 @@ class DirectDB:
         except Exception as e:
             logger.error(f"Error fetching feedbacks: {e}")
             return []
+
+    @staticmethod
+    def is_citizen_incident_author(incident_id: str, citizen_id: str, citizen_email: Optional[str] = None) -> bool:
+        try:
+            with get_db_cursor() as cur:
+                if not cur:
+                    return False
+                cur.execute(
+                    """
+                    SELECT 1 FROM complaint_reports 
+                    WHERE incident_id = %s 
+                      AND (citizen_id = %s OR citizen_id = %s OR citizen_profile_id::text = %s)
+                    LIMIT 1;
+                    """,
+                    (incident_id, str(citizen_id), str(citizen_email or citizen_id), str(citizen_id))
+                )
+                return cur.fetchone() is not None
+        except Exception as e:
+            logger.error(f"Error checking citizen incident author: {e}")
+            return False

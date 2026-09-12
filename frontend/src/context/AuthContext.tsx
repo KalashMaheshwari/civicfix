@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, user: Profile) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
   hasRole: (roles: UserRole[]) => boolean;
 }
@@ -19,30 +20,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(localStorage.getItem('civicfix_token'));
   const [loading, setLoading] = useState<boolean>(true);
 
+  const fetchProfile = async (authToken: string) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const profile = await res.json();
+        setUser(profile);
+      } else {
+        logout();
+      }
+    } catch {
+      // Offline / network failure keep current session
+    }
+  };
+
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('civicfix_token');
       if (storedToken) {
-        try {
-          const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          });
-          if (res.ok) {
-            const profile = await res.json();
-            setUser(profile);
-            setToken(storedToken);
-          } else {
-            logout();
-          }
-        } catch {
-          logout();
-        }
+        await fetchProfile(storedToken);
       }
       setLoading(false);
     };
 
     initAuth();
   }, []);
+
+  const refreshUser = async () => {
+    const storedToken = localStorage.getItem('civicfix_token');
+    if (storedToken) {
+      await fetchProfile(storedToken);
+    }
+  };
 
   const login = (newToken: string, newUser: Profile) => {
     localStorage.setItem('civicfix_token', newToken);
@@ -69,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         login,
         logout,
+        refreshUser,
         isAuthenticated: !!user && !!token,
         hasRole,
       }}

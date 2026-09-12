@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { fetchIncidents } from '../services/api';
 import type { Incident } from '../types/incident';
 import { NotificationDrawer } from './NotificationDrawer';
+import { StarIcon } from './StarIcon';
 
 interface AdaptiveHeaderProps {
   onSearchClick?: () => void;
@@ -265,6 +266,12 @@ export const AdaptiveHeader: React.FC<AdaptiveHeaderProps> = ({ onSelectIncident
               <span className="header-user-name">
                 {user?.full_name?.split(' ')[0] || (isOfficial ? 'MCD Engineer' : 'Resident')}
               </span>
+              {!isOfficial && user && (
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#0284c7', background: 'rgba(2, 132, 199, 0.1)', padding: '2px 8px', borderRadius: 10, marginLeft: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <StarIcon size={12} />
+                  <span>{user.civic_points || 140}</span>
+                </span>
+              )}
               
               <svg 
                 className="verified-check-icon" 

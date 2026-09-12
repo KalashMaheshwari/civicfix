@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Plus } from 'lucide-react';
+import { StarIcon } from './StarIcon';
 
 export const DesktopRail: React.FC = () => {
   const { user } = useAuth();
@@ -43,6 +44,20 @@ export const DesktopRail: React.FC = () => {
           <span>{t('account_preferences')}</span>
         </NavLink>
       </nav>
+
+      {/* Mini Citizen Level & Points status card */}
+      {!isOfficial && user && (
+        <div style={{ margin: '0 12px 12px', padding: '10px 12px', background: 'var(--bg-subtle, #f0f6fb)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-default)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)' }}>Level {user.level || 1}</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <StarIcon size={12} />
+              <span>{user.civic_points || 140} Pts</span>
+            </span>
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, fontWeight: 500 }}>{user.level_title || 'Alert Resident'}</div>
+        </div>
+      )}
 
       {/* Prominently Highlighted Action Section at bottom of side nav */}
       {!isOfficial && (

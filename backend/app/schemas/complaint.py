@@ -25,6 +25,15 @@ class ProfileCreate(ProfileBase):
 class ProfileResponse(ProfileBase):
     id: Union[str, UUID]
     civic_points: int = 10
+    reputation_score: int = 95
+    impact_score: int = 70
+    level: int = 1
+    level_title: str = "Alert Resident"
+    verified_reports_count: int = 0
+    verifications_count: int = 0
+    commuters_assisted: int = 0
+    category_counts: Optional[dict] = None
+    recent_audits: Optional[List[dict]] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

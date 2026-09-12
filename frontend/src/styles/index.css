@@ -6,19 +6,19 @@
    ============================================================================== */
 
 :root {
-  /* Surface & Background Hierarchy */
-  --bg-canvas: #F6F8FA;
+  /* Surface & Background Hierarchy - Pastel Very Light Blue Aesthetic */
+  --bg-canvas: #EEF5FB;
   --bg-surface: #FFFFFF;
-  --bg-subtle: #F1F4F6;
+  --bg-subtle: #E3EDF7;
   --bg-elevated: #FFFFFF;
-  --bg-hover: #ECEFF2;
-  --bg-active: #E2E7EC;
+  --bg-hover: #D7E6F3;
+  --bg-active: #CBE0F0;
 
   /* Structural Hairline Borders */
-  --border-default: #DDE3EA;
-  --border-subtle: #E8EDF2;
-  --border-strong: #BAC6D4;
-  --border-focus: #0D5C3A;
+  --border-default: #D0E0EF;
+  --border-subtle: #E2EDF7;
+  --border-strong: #B5CDE3;
+  --border-focus: #0284C7;
 
   /* Editorial & Civic Typography Colors */
   --text-primary: #0F172A;     /* Slate 900 */
@@ -200,28 +200,15 @@ h1, h2, h3, h4, h5, h6 {
   transform: scale(1.06);
 }
 
-/* Premium Figma-Level Active State: Royal Violet / Iris Specular Gradient */
+/* Figma-Level Active State: Solid Clean Lavender */
 .rail-link.active {
-  background: linear-gradient(90deg, rgba(139, 92, 246, 0.10) 0%, rgba(124, 58, 237, 0.03) 60%, #FFFFFF 100%);
+  background: #F5F3FF;
   color: #5B21B6;
   font-weight: 700;
   border: 1px solid rgba(139, 92, 246, 0.28);
   box-shadow: 
     0 2px 8px -1px rgba(124, 58, 237, 0.10),
-    0 1px 2px rgba(15, 23, 42, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-
-/* Atmospheric Luminous Violet Radial Leak */
-.rail-link.active::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 80px;
-  background: radial-gradient(circle at left, rgba(167, 139, 250, 0.45) 0%, rgba(221, 214, 254, 0.2) 50%, transparent 80%);
-  pointer-events: none;
+    0 1px 2px rgba(15, 23, 42, 0.03);
 }
 
 /* Electric Violet/Indigo Pillar Anchor */
@@ -233,8 +220,8 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 7px;
   width: 3.5px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #8B5CF6 0%, #6D28D9 100%);
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+  background: #8B5CF6;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
 }
 
 .rail-link.active img {
@@ -253,37 +240,24 @@ h1, h2, h3, h4, h5, h6 {
   gap: 12px;
   padding: 11px 14px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #112922 0%, #1A3B32 100%);
+  background: #112922;
   color: #FFFFFF;
   text-decoration: none;
   box-shadow: 
     0 4px 12px -2px rgba(17, 41, 34, 0.35),
-    0 1px 3px rgba(17, 41, 34, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    0 1px 3px rgba(17, 41, 34, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
 
-.rail-lodge-btn::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 50px;
-  background: radial-gradient(circle at left, rgba(167, 243, 208, 0.25) 0%, transparent 80%);
-  pointer-events: none;
-}
-
 .rail-lodge-btn:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, #16362D 0%, #224C41 100%);
+  background: #16362D;
   box-shadow: 
     0 6px 16px -2px rgba(17, 41, 34, 0.45),
-    0 2px 6px rgba(17, 41, 34, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 2px 6px rgba(17, 41, 34, 0.25);
   color: #FFFFFF;
 }
 
@@ -1091,29 +1065,29 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 }
 
-/* Subtle Gradient & Tint Fills on Hover matching each category theme */
+/* Solid Tint Fills on Hover matching each category theme */
 .bento-item-peach:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5F5 100%);
+  background: #FFF5F5;
   border-color: #FCA5A5;
 }
 
 .bento-item-aqua:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F0FDFA 100%);
+  background: #F0FDFA;
   border-color: #5EEAD4;
 }
 
 .bento-item-sand:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF5 100%);
+  background: #FFFDF5;
   border-color: #FDE68A;
 }
 
 .bento-item-lavender:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F5F7FF 100%);
+  background: #F5F7FF;
   border-color: #A5B4FC;
 }
 
 .bento-item-sage:hover {
-  background: linear-gradient(135deg, #FFFFFF 0%, #F0FDF4 100%);
+  background: #F0FDF4;
   border-color: #86EFAC;
 }
 
@@ -1214,22 +1188,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==============================================================================
-   SKELETON SHIMMER LOADERS
+   SKELETON PULSE LOADERS
    ============================================================================== */
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite ease-in-out;
+  background: #E2E8F0;
+  animation: pulse-loader 1.5s infinite ease-in-out;
   border-radius: var(--radius-xs, 6px);
   display: inline-block;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+@keyframes pulse-loader {
+  0%, 100% {
+    opacity: 1;
   }
-  100% {
-    background-position: -200% 0;
+  50% {
+    opacity: 0.45;
   }
 }
 

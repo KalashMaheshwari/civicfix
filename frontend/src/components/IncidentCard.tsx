@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, X, Image as ImageIcon, MapPin, Users, UserCheck } from 'lucide-react';
+import { Check, X, Image as ImageIcon, MapPin, Users, UserCheck, Lock, Clock } from 'lucide-react';
 import type { Incident, UserRole } from '../types/incident';
 import { formatImageUrl } from '../services/api';
 import { StatusTimelineStepper } from './StatusTimelineStepper';
@@ -47,6 +47,22 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
     }
   };
 
+  const formatLodgedTime = (dateStr?: string) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleDateString(undefined, {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return '';
+    }
+  };
+
   const primarySrc = formatImageUrl(incident.primary_image_url);
   const resolutionSrc = formatImageUrl(incident.resolution_image_url);
 
@@ -76,8 +92,8 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
       <div className="card-content">
         <div className="card-header-row">
           <span className="card-ref">#CF-{incident.id.substring(0,6).toUpperCase()}</span>
-          <span style={{ fontSize: 11.5, fontWeight: 600, color: incident.priority_score >= 70 ? 'var(--status-open-fg)' : 'var(--text-muted)' }}>
-            {incident.priority_score >= 70 ? 'Priority: Urgent' : 'Priority: Normal'}
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <Clock size={11} /> {formatLodgedTime(incident.created_at)}
           </span>
         </div>
         
@@ -88,7 +104,12 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
           <span>{incident.address || 'Ward-04 Landmark Zone'}</span>
         </div>
 
-        <StatusTimelineStepper status={incident.status} />
+        <StatusTimelineStepper
+          status={incident.status}
+          createdAt={incident.created_at}
+          resolvedAt={incident.resolved_at}
+          updatedAt={incident.updated_at}
+        />
 
         {/* Citizen Verification Panel */}
         {role === 'citizen' && isPendingVote && (
@@ -108,14 +129,21 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
               </div>
             </div>
             
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button className="btn btn-sage btn-sm" onClick={() => onVote(incident.id, true)}>
-                <Check size={13} /> {t('confirm_fix')}
-              </button>
-              <button className="btn btn-peach btn-sm" onClick={() => onOpenDispute?.(incident.id)}>
-                <X size={13} /> {t('reject_escalate')}
-              </button>
-            </div>
+            {isMyReport ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <button className="btn btn-sage btn-sm" onClick={() => onVote(incident.id, true)}>
+                  <Check size={13} /> {t('confirm_fix')}
+                </button>
+                <button className="btn btn-peach btn-sm" onClick={() => onOpenDispute?.(incident.id)}>
+                  <X size={13} /> {t('reject_escalate')}
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: '#64748B', background: '#FFFFFF', padding: '7px 10px', borderRadius: 6, border: '1px solid #CBD5E1' }}>
+                <Lock size={13} color="#94A3B8" />
+                <span>Verification sign-off is reserved for the resident who raised this ticket.</span>
+              </div>
+            )}
           </div>
         )}
 

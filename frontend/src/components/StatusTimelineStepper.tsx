@@ -4,16 +4,44 @@ import { useLanguage } from '../context/LanguageContext';
 
 interface StatusTimelineStepperProps {
   status: string;
+  createdAt?: string;
+  resolvedAt?: string | null;
+  updatedAt?: string;
 }
 
-export const StatusTimelineStepper: React.FC<StatusTimelineStepperProps> = ({ status }) => {
+function formatStepTime(dateStr?: string | null): string | null {
+  if (!dateStr) return null;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return null;
+  }
+}
+
+export const StatusTimelineStepper: React.FC<StatusTimelineStepperProps> = ({
+  status,
+  createdAt,
+  resolvedAt,
+  updatedAt,
+}) => {
   const { t } = useLanguage();
 
+  const formattedCreated = formatStepTime(createdAt);
+  const formattedResolved = formatStepTime(resolvedAt);
+  const formattedVerified = formatStepTime(status === 'CLOSED_VERIFIED' ? updatedAt : null);
+
   const steps = [
-    { id: 'OPEN', label: t('step_reported') },
-    { id: 'IN_PROGRESS', label: t('step_assigned') },
-    { id: 'RESOLVED_PENDING_VERIFICATION', label: t('step_proof_filed') },
-    { id: 'CLOSED_VERIFIED', label: t('step_verified') },
+    { id: 'OPEN', label: t('step_reported'), timestamp: formattedCreated },
+    { id: 'IN_PROGRESS', label: t('step_assigned'), timestamp: null },
+    { id: 'RESOLVED_PENDING_VERIFICATION', label: t('step_proof_filed'), timestamp: formattedResolved },
+    { id: 'CLOSED_VERIFIED', label: t('step_verified'), timestamp: formattedVerified },
   ];
 
   let currentIndex = 0;
@@ -54,13 +82,26 @@ export const StatusTimelineStepper: React.FC<StatusTimelineStepperProps> = ({ st
                   lineHeight: 1.2,
                   color: isActive ? 'var(--text-primary)' : isCompleted ? 'var(--text-secondary)' : 'var(--text-muted)',
                   fontWeight: isActive ? 700 : 500,
-                  maxWidth: 65,
+                  maxWidth: 68,
                   wordBreak: 'break-word',
                   textAlign: 'center',
                 }}
               >
                 {step.label}
               </span>
+              {step.timestamp && (
+                <span
+                  style={{
+                    fontSize: 9,
+                    color: '#64748B',
+                    fontFamily: 'var(--font-mono)',
+                    marginTop: 2,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {step.timestamp}
+                </span>
+              )}
             </div>
           );
         })}

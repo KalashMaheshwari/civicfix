@@ -179,6 +179,16 @@ async def vote_incident_feedback(
         )
 
     citizen_id = str(current_citizen["id"])
+    citizen_email = current_citizen.get("email") or ""
+
+    # Strict access control: Only the citizen who originally raised/reported this ticket can sign off
+    is_author = DirectDB.is_citizen_incident_author(incident_id, citizen_id, citizen_email)
+    if not is_author and current_citizen.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted: Only the citizen who originally raised or reported this ticket is authorized to review and sign off on the contractor repair."
+        )
+
     proof_image_url = None
 
     if file:

@@ -35,6 +35,17 @@ export interface Incident {
   updated_at: string;
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'reporting' | 'verification' | 'impact' | 'mastery';
+  unlocked: boolean;
+  progress?: number;
+  maxProgress?: number;
+}
+
 export interface Profile {
   id: string;
   full_name: string;
@@ -44,6 +55,21 @@ export interface Profile {
   department: string | null;
   official_badge_id: string | null;
   civic_points: number;
+  reputation_score?: number;
+  impact_score?: number;
+  level?: number;
+  level_title?: string;
+  verified_reports_count?: number;
+  verifications_count?: number;
+  commuters_assisted?: number;
+  category_counts?: Record<string, number>;
+  recent_audits?: Array<{
+    action: string;
+    location: string;
+    points: string;
+    time: string;
+    type: string;
+  }>;
   created_at: string;
 }
 
