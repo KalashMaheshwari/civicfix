@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Check, X, Image as ImageIcon, MapPin, Users } from 'lucide-react';
+import { Check, X, Image as ImageIcon, MapPin, Users, UserCheck } from 'lucide-react';
 import type { Incident, UserRole } from '../types/incident';
 import { formatImageUrl } from '../services/api';
 import { StatusTimelineStepper } from './StatusTimelineStepper';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -21,12 +22,19 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
   onOpenDispute,
 }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [imgError, setImgError] = useState(false);
   const isPendingVote = incident.status === 'RESOLVED_PENDING_VERIFICATION';
   const canGovtResolve =
     incident.status === 'OPEN' ||
     incident.status === 'IN_PROGRESS' ||
     incident.status === 'DISPUTED_REOPENED';
+
+  const isMyReport = Boolean(
+    user &&
+    incident.citizen_ids &&
+    (incident.citizen_ids.includes(user.id) || (user.email && incident.citizen_ids.includes(user.email)))
+  );
 
   const formatStatus = (status: string) => {
     switch (status) {
@@ -53,10 +61,15 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
             <span style={{ fontSize: 12 }}>Visual inspection record registered</span>
           </div>
         )}
-        <div style={{ position: 'absolute', top: 10, left: 10 }}>
+        <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <span className={`status-chip status-${incident.status}`}>
             {formatStatus(incident.status)}
           </span>
+          {isMyReport && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, background: 'rgba(2, 132, 199, 0.9)', color: '#FFFFFF', fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 'var(--radius-xs)', backdropFilter: 'blur(4px)' }}>
+              <UserCheck size={11} /> My Ticket
+            </span>
+          )}
         </div>
       </div>
 

@@ -38,10 +38,11 @@ export function invalidateIncidentsCache() {
   cache.clear();
 }
 
-export async function fetchIncidents(status?: string, category?: string, forceRefresh = false): Promise<Incident[]> {
+export async function fetchIncidents(status?: string, category?: string, forceRefresh = false, citizenId?: string): Promise<Incident[]> {
   const params = new URLSearchParams();
   if (status && status !== 'ALL') params.append('status', status);
   if (category) params.append('category', category);
+  if (citizenId) params.append('citizen_id', citizenId);
   params.append('limit', '100');
 
   const cacheKey = params.toString();

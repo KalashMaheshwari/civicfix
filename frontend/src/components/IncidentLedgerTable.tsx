@@ -1,8 +1,9 @@
 import React from 'react';
-import { ExternalLink, Image as ImageIcon, MapPin } from 'lucide-react';
+import { ExternalLink, Image as ImageIcon, MapPin, UserCheck } from 'lucide-react';
 import type { Incident } from '../types/incident';
 import { formatImageUrl } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 interface IncidentLedgerTableProps {
   incidents: Incident[];
@@ -12,6 +13,7 @@ interface IncidentLedgerTableProps {
 
 export const IncidentLedgerTable: React.FC<IncidentLedgerTableProps> = ({ incidents, isLoading = false, onActionClick }) => {
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const formatStatus = (status: string) => {
     switch (status) {
@@ -74,6 +76,11 @@ export const IncidentLedgerTable: React.FC<IncidentLedgerTableProps> = ({ incide
           ) : (
             incidents.map((inc) => {
               const imgSrc = formatImageUrl(inc.primary_image_url);
+              const isMyReport = Boolean(
+                user &&
+                inc.citizen_ids &&
+                (inc.citizen_ids.includes(user.id) || (user.email && inc.citizen_ids.includes(user.email)))
+              );
               return (
               <tr key={inc.id}>
                 <td>
@@ -85,7 +92,16 @@ export const IncidentLedgerTable: React.FC<IncidentLedgerTableProps> = ({ incide
                     )}
                   </div>
                 </td>
-                <td className="ref-id">#CF-{inc.id.substring(0,6).toUpperCase()}</td>
+                <td className="ref-id">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>#CF-{inc.id.substring(0,6).toUpperCase()}</span>
+                    {isMyReport && (
+                      <span title="Reported by you" style={{ display: 'inline-flex', alignItems: 'center', gap: 2, background: 'var(--primary-bg, #eff6ff)', color: 'var(--primary, #0284c7)', border: '1px solid var(--primary-border, #bae6fd)', padding: '1px 5px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
+                        <UserCheck size={10} /> Mine
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{inc.category.replace(/_/g, ' ')}</td>
                 <td style={{ color: 'var(--text-secondary)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>

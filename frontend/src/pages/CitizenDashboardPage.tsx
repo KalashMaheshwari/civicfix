@@ -15,17 +15,20 @@ import { AdaptiveHeader } from '../components/AdaptiveHeader';
 import { DesktopRail } from '../components/DesktopRail';
 import { MobileDock } from '../components/MobileDock';
 import { CommandPalette } from '../components/CommandPalette';
-import { LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Globe, UserCheck, PlusCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { formatErrorMessage } from '../utils/errors';
+import { useNavigate } from 'react-router-dom';
 
 export const CitizenDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<string>('ALL');
+  const [scopeFilter, setScopeFilter] = useState<'ALL' | 'MY_TICKETS'>('ALL');
   const [viewMode, setViewMode] = useState<'GRID' | 'TABLE'>(window.innerWidth >= 1024 ? 'TABLE' : 'GRID');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -104,13 +107,97 @@ export const CitizenDashboardPage: React.FC = () => {
     }
   };
 
+  const myTicketsCount = incidents.filter((item) => {
+    return Boolean(
+      user &&
+      item.citizen_ids &&
+      (item.citizen_ids.includes(user.id) || (user.email && item.citizen_ids.includes(user.email)))
+    );
+  }).length;
+
   const filtered = incidents.filter((item) => {
+    if (scopeFilter === 'MY_TICKETS') {
+      const isMine = Boolean(
+        user &&
+        item.citizen_ids &&
+        (item.citizen_ids.includes(user.id) || (user.email && item.citizen_ids.includes(user.email)))
+      );
+      if (!isMine) return false;
+    }
     if (filter === 'ALL') return true;
     return item.status === filter;
   });
 
   const renderReportsList = () => (
     <>
+      {/* Scope Segmented Switch: All Ward vs My Registered Tickets */}
+      <div style={{ marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div style={{ display: 'inline-flex', background: 'var(--bg-subtle, #f1f5f9)', padding: 3, borderRadius: 'var(--radius-sm, 8px)', border: '1px solid var(--border-default, #e2e8f0)' }}>
+          <button
+            type="button"
+            onClick={() => setScopeFilter('ALL')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              fontSize: 12.5,
+              fontWeight: 600,
+              borderRadius: 'var(--radius-xs, 6px)',
+              border: 'none',
+              background: scopeFilter === 'ALL' ? 'var(--bg-surface, #ffffff)' : 'transparent',
+              color: scopeFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-muted)',
+              boxShadow: scopeFilter === 'ALL' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <Globe size={14} color={scopeFilter === 'ALL' ? 'var(--primary)' : 'var(--text-muted)'} />
+            <span>All Ward Issues</span>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: scopeFilter === 'ALL' ? 'var(--primary-bg, #eff6ff)' : 'transparent', color: scopeFilter === 'ALL' ? 'var(--primary)' : 'var(--text-muted)' }}>
+              {incidents.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setScopeFilter('MY_TICKETS')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '6px 14px',
+              fontSize: 12.5,
+              fontWeight: 600,
+              borderRadius: 'var(--radius-xs, 6px)',
+              border: 'none',
+              background: scopeFilter === 'MY_TICKETS' ? 'var(--bg-surface, #ffffff)' : 'transparent',
+              color: scopeFilter === 'MY_TICKETS' ? 'var(--primary, #0284c7)' : 'var(--text-muted)',
+              boxShadow: scopeFilter === 'MY_TICKETS' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <UserCheck size={14} color={scopeFilter === 'MY_TICKETS' ? 'var(--primary)' : 'var(--text-muted)'} />
+            <span>My Registered Tickets</span>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 10, background: scopeFilter === 'MY_TICKETS' ? 'var(--primary)' : 'var(--border-default)', color: scopeFilter === 'MY_TICKETS' ? '#ffffff' : 'var(--text-muted)' }}>
+              {myTicketsCount}
+            </span>
+          </button>
+        </div>
+
+        {window.innerWidth >= 1024 && (
+          <div style={{ display: 'flex', gap: 2, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: 2, background: 'var(--bg-surface)' }}>
+            <button onClick={() => setViewMode('TABLE')} style={{ background: viewMode === 'TABLE' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'TABLE' ? 'var(--text-primary)' : 'var(--text-muted)' }} title="Table View">
+              <List size={14} />
+            </button>
+            <button onClick={() => setViewMode('GRID')} style={{ background: viewMode === 'GRID' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'GRID' ? 'var(--text-primary)' : 'var(--text-muted)' }} title="Grid View">
+              <LayoutGrid size={14} />
+            </button>
+          </div>
+        )}
+      </div>
+
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div className="filter-strip" style={{ margin: 0, padding: 0 }}>
           <button className={`chip ${filter === 'ALL' ? 'active' : ''}`} onClick={() => setFilter('ALL')}>All</button>
@@ -119,23 +206,30 @@ export const CitizenDashboardPage: React.FC = () => {
           <button className={`chip ${filter === 'RESOLVED_PENDING_VERIFICATION' ? 'active' : ''}`} onClick={() => setFilter('RESOLVED_PENDING_VERIFICATION')}>Verification Needed</button>
           <button className={`chip ${filter === 'CLOSED_VERIFIED' ? 'active' : ''}`} onClick={() => setFilter('CLOSED_VERIFIED')}>Verified Fixed</button>
         </div>
-
-        {window.innerWidth >= 1024 && (
-          <div style={{ display: 'flex', gap: 2, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: 2, background: 'var(--bg-surface)' }}>
-            <button onClick={() => setViewMode('TABLE')} style={{ background: viewMode === 'TABLE' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'TABLE' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-              <List size={14} />
-            </button>
-            <button onClick={() => setViewMode('GRID')} style={{ background: viewMode === 'GRID' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'GRID' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-              <LayoutGrid size={14} />
-            </button>
-          </div>
-        )}
       </div>
 
       {!isLoading && filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
-          <p style={{ fontWeight: 600, fontSize: 14 }}>No issues found matching the selected status.</p>
-          <p style={{ fontSize: 12.5, marginTop: 4 }}>Check back shortly or lodge a new civic report.</p>
+        <div className="card" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+          <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>
+            {scopeFilter === 'MY_TICKETS'
+              ? 'No tickets filed by you in this view.'
+              : 'No issues found matching the selected status.'}
+          </p>
+          <p style={{ fontSize: 13, marginTop: 6, maxWidth: 420, margin: '6px auto 16px' }}>
+            {scopeFilter === 'MY_TICKETS'
+              ? 'When you lodge a civic report, your ticket will appear here with live repair updates and verification sign-offs.'
+              : 'Check back shortly or lodge a new civic report for Ward-04.'}
+          </p>
+          {scopeFilter === 'MY_TICKETS' && (
+            <button
+              onClick={() => navigate('/citizen/new')}
+              className="btn btn-primary"
+              style={{ margin: '0 auto', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+            >
+              <PlusCircle size={15} />
+              <span>Lodge a Civic Report</span>
+            </button>
+          )}
         </div>
       ) : viewMode === 'TABLE' ? (
         <IncidentLedgerTable incidents={filtered} isLoading={isLoading} onActionClick={(inc) => setSelectedIncident(inc)} />

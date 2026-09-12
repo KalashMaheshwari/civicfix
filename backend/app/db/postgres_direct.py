@@ -278,31 +278,50 @@ class DirectDB:
             return None
 
     @staticmethod
-    def list_incidents(status_filter: Optional[str] = None, category_filter: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def list_incidents(
+        status_filter: Optional[str] = None,
+        category_filter: Optional[str] = None,
+        citizen_id: Optional[str] = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
         try:
             with get_db_cursor() as cur:
                 if not cur:
                     return []
-                # Fast column projection (excluding massive 512-dim vector embedding column over network)
+                # Fast column projection with citizen_ids attribution
                 query = """
                     SELECT 
-                        id, category, title, description, latitude, longitude, address,
-                        status, priority_score, base_severity, duplicate_count, total_reports,
-                        primary_image_url, assigned_department, assigned_officer_id,
-                        assigned_officer_name, resolution_image_url, resolution_notes,
-                        resolved_by_official_id, resolved_at, citizen_feedback_yes,
-                        citizen_feedback_no, citizen_verified_status, created_at, updated_at
-                    FROM incidents 
+                        i.id, i.category, i.title, i.description, i.latitude, i.longitude, i.address,
+                        i.status, i.priority_score, i.base_severity, i.duplicate_count, i.total_reports,
+                        i.primary_image_url, i.assigned_department, i.assigned_officer_id,
+                        i.assigned_officer_name, i.resolution_image_url, i.resolution_notes,
+                        i.resolved_by_official_id, i.resolved_at, i.citizen_feedback_yes,
+                        i.citizen_feedback_no, i.citizen_verified_status, i.created_at, i.updated_at,
+                        COALESCE((
+                            SELECT array_agg(DISTINCT cr.citizen_id)
+                            FROM complaint_reports cr
+                            WHERE cr.incident_id = i.id
+                        ), ARRAY[]::text[]) as citizen_ids
+                    FROM incidents i
                     WHERE 1=1
                 """
                 params = []
                 if status_filter and status_filter != 'ALL':
-                    query += " AND status = %s"
+                    query += " AND i.status = %s"
                     params.append(status_filter.upper())
                 if category_filter:
-                    query += " AND category = %s"
+                    query += " AND i.category = %s"
                     params.append(category_filter)
-                query += " ORDER BY priority_score DESC, created_at DESC LIMIT %s;"
+                if citizen_id:
+                    query += """
+                        AND EXISTS (
+                            SELECT 1 FROM complaint_reports cr
+                            WHERE cr.incident_id = i.id
+                              AND (cr.citizen_id = %s OR cr.citizen_id = (SELECT email FROM profiles WHERE id::text = %s LIMIT 1))
+                        )
+                    """
+                    params.extend([str(citizen_id), str(citizen_id)])
+                query += " ORDER BY i.priority_score DESC, i.created_at DESC LIMIT %s;"
                 params.append(limit)
                 cur.execute(query, tuple(params))
                 return [dict(r) for r in cur.fetchall()]

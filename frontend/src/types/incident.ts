@@ -30,6 +30,7 @@ export interface Incident {
   citizen_feedback_yes: number;
   citizen_feedback_no: number;
   citizen_verified_status: 'PENDING' | 'CONFIRMED' | 'DISPUTED';
+  citizen_ids?: string[];
   created_at: string;
   updated_at: string;
 }

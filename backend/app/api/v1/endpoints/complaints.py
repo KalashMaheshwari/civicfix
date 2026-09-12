@@ -70,13 +70,19 @@ async def report_complaint(
 async def list_incidents(
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
     category_filter: Optional[str] = Query(None, alias="category", description="Filter by category"),
+    citizen_id: Optional[str] = Query(None, description="Filter only tickets registered by this citizen"),
     limit: int = Query(50, ge=1, le=200)
 ):
     """
     List civic incident clusters sorted by priority score (highest first).
     Publicly accessible or authenticated.
     """
-    return DirectDB.list_incidents(status_filter=status_filter, category_filter=category_filter, limit=limit)
+    return DirectDB.list_incidents(
+        status_filter=status_filter,
+        category_filter=category_filter,
+        citizen_id=citizen_id,
+        limit=limit
+    )
 
 
 @router.get("/incidents/{incident_id}")

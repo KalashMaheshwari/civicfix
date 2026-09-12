@@ -62,6 +62,7 @@ class IncidentResponse(IncidentBase):
     citizen_feedback_yes: int = 0
     citizen_feedback_no: int = 0
     citizen_verified_status: str = "PENDING"
+    citizen_ids: Optional[List[str]] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 
