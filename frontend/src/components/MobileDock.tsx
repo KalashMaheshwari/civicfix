@@ -25,7 +25,7 @@ export const MobileDock: React.FC = () => {
         {!isOfficial ? (
           <NavLink
             to="/citizen/new"
-            className={({ isActive }) => `dock-tab ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `dock-tab dock-tab-raised ${isActive ? 'active' : ''}`}
             title="Lodge New Civic Report"
           >
             <div className="dock-circle-container">
@@ -36,7 +36,7 @@ export const MobileDock: React.FC = () => {
         ) : (
           <NavLink
             to={`${prefix}/analytics`}
-            className={({ isActive }) => `dock-tab ${isActive ? 'active' : ''}`}
+            className={({ isActive }) => `dock-tab dock-tab-raised ${isActive ? 'active' : ''}`}
             title="Dispatch & Triage Queue"
           >
             <div className="dock-circle-container">
