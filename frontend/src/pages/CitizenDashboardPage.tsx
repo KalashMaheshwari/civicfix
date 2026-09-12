@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation } from 'react-router-dom';
 import { BentoCategoryGrid } from '../components/BentoCategoryGrid';
-import { IncidentCard } from '../components/IncidentCard';
 import { IncidentLedgerTable } from '../components/IncidentLedgerTable';
 import { MetricCards } from '../components/MetricCards';
 import { TicketDetailModal } from '../components/TicketDetailModal';
@@ -15,7 +14,7 @@ import { AdaptiveHeader } from '../components/AdaptiveHeader';
 import { DesktopRail } from '../components/DesktopRail';
 import { MobileDock } from '../components/MobileDock';
 import { CommandPalette } from '../components/CommandPalette';
-import { LayoutGrid, List, Globe, UserCheck, PlusCircle } from 'lucide-react';
+import { Globe, UserCheck, PlusCircle } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { formatErrorMessage } from '../utils/errors';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +28,6 @@ export const CitizenDashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<string>('ALL');
   const [scopeFilter, setScopeFilter] = useState<'ALL' | 'MY_TICKETS'>('ALL');
-  const [viewMode, setViewMode] = useState<'GRID' | 'TABLE'>(window.innerWidth >= 1024 ? 'TABLE' : 'GRID');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
@@ -44,14 +42,6 @@ export const CitizenDashboardPage: React.FC = () => {
     const handler = () => setCmdOpen(true);
     document.addEventListener('open-command-palette', handler);
     return () => document.removeEventListener('open-command-palette', handler);
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) setViewMode('GRID');
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const addToast = (text: string, type: 'info' | 'error' | 'success' = 'info') => {
@@ -185,17 +175,6 @@ export const CitizenDashboardPage: React.FC = () => {
             </span>
           </button>
         </div>
-
-        {window.innerWidth >= 1024 && (
-          <div style={{ display: 'flex', gap: 2, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: 2, background: 'var(--bg-surface)' }}>
-            <button onClick={() => setViewMode('TABLE')} style={{ background: viewMode === 'TABLE' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'TABLE' ? 'var(--text-primary)' : 'var(--text-muted)' }} title="Table View">
-              <List size={14} />
-            </button>
-            <button onClick={() => setViewMode('GRID')} style={{ background: viewMode === 'GRID' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'GRID' ? 'var(--text-primary)' : 'var(--text-muted)' }} title="Grid View">
-              <LayoutGrid size={14} />
-            </button>
-          </div>
-        )}
       </div>
 
       <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -231,32 +210,12 @@ export const CitizenDashboardPage: React.FC = () => {
             </button>
           )}
         </div>
-      ) : viewMode === 'TABLE' ? (
-        <IncidentLedgerTable incidents={filtered} isLoading={isLoading} onActionClick={(inc) => setSelectedIncident(inc)} />
       ) : (
-        <div className="incidents-grid">
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, idx) => (
-              <div key={`skel-card-${idx}`} className="card" style={{ height: 260, display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-                <div className="skeleton" style={{ width: '100%', height: 130, borderRadius: 'var(--radius-sm)' }} />
-                <div className="skeleton" style={{ width: '60%', height: 18, borderRadius: 4 }} />
-                <div className="skeleton" style={{ width: '90%', height: 14, borderRadius: 4 }} />
-                <div className="skeleton" style={{ width: '40%', height: 14, borderRadius: 4, marginTop: 'auto' }} />
-              </div>
-            ))
-          ) : (
-            filtered.map((inc) => (
-              <IncidentCard
-                key={inc.id}
-                incident={inc}
-                role="citizen"
-                onVote={handleVote}
-                onOpenResolve={() => {}}
-                onOpenDispute={(id) => setDisputeIncidentId(id)}
-              />
-            ))
-          )}
-        </div>
+        <IncidentLedgerTable 
+          incidents={filtered} 
+          isLoading={isLoading} 
+          onActionClick={(inc) => setSelectedIncident(inc)} 
+        />
       )}
     </>
   );

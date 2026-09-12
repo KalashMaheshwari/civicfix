@@ -22,12 +22,13 @@ export function formatImageUrl(url: string | null | undefined): string {
     clean = '/' + clean;
   }
 
-  // If path is a public frontend asset (e.g. /demo issues/..., /bento/..., /citizen.webp), serve directly from frontend
-  if (clean.startsWith('/demo issues/') || clean.startsWith('/demo%20issues/') || clean.startsWith('/bento/') || clean.startsWith('/nav/')) {
-    return clean;
+  // Prepend backend BASE_URL only for dynamically uploaded images
+  if (clean.startsWith('/uploaded_images/')) {
+    return BASE_URL ? `${BASE_URL}${clean}` : clean;
   }
 
-  return BASE_URL ? `${BASE_URL}${clean}` : clean;
+  // Other paths (like /citizen.webp, /demo issues/) are static frontend assets
+  return clean;
 }
 
 // In-memory query cache for instant page switching & low device network overhead

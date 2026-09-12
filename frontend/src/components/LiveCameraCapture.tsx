@@ -192,217 +192,355 @@ export const LiveCameraCapture: React.FC<LiveCameraCaptureProps> = ({
   return (
     <div
       style={{
-        position: 'relative',
-        width: '100%',
-        minHeight: 320,
-        background: '#0f172a',
-        borderRadius: 'var(--radius-sm, 8px)',
-        overflow: 'hidden',
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999,
+        background: '#000000',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        border: '2px solid var(--primary, #0284c7)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        justifyContent: 'space-between',
+        userSelect: 'none',
+        overflow: 'hidden',
       }}
     >
       {cameraError ? (
-        <div style={{ padding: 24, textAlign: 'center', color: '#f87171' }}>
-          <AlertCircle size={36} style={{ margin: '0 auto 12px' }} />
-          <p style={{ fontWeight: 600, fontSize: 14 }}>{cameraError}</p>
-          <button className="btn btn-secondary btn-sm" onClick={startCamera} style={{ marginTop: 14 }}>
-            Retry Camera Access
-          </button>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, textAlign: 'center', color: '#FFFFFF' }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.2)', color: '#F87171', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            <AlertCircle size={36} />
+          </div>
+          <h3 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px 0' }}>Camera Access Required</h3>
+          <p style={{ color: '#94A3B8', fontSize: 14, maxWidth: 360, margin: '0 0 20px 0', lineHeight: 1.4 }}>
+            {cameraError}
+          </p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={startCamera}
+              style={{
+                background: '#0284C7',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              Retry Access
+            </button>
+          </div>
         </div>
       ) : capturedDataUrl ? (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <img
-            src={capturedDataUrl}
-            alt="Captured with Geotag"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-          {/* Action Bar */}
+        /* Captured Photo Fullscreen Review Screen */
+        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#000000' }}>
+          {/* Top Bar */}
           <div
             style={{
               position: 'absolute',
-              top: 10,
-              right: 10,
-              display: 'flex',
-              gap: 8,
-              background: 'rgba(15, 23, 42, 0.75)',
-              padding: '4px 8px',
-              borderRadius: 20,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontSize: 11, fontWeight: 700 }}>
-              <ShieldCheck size={14} /> Geotag Verified
-            </div>
-          </div>
-
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 12,
+              top: 0,
               left: 0,
               right: 0,
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              zIndex: 10,
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16, 185, 129, 0.2)', border: '1px solid #10B981', padding: '4px 10px', borderRadius: 20, color: '#34D399', fontSize: 12, fontWeight: 700 }}>
+              <ShieldCheck size={14} /> GPS Watermark Applied
+            </div>
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  background: 'rgba(0,0,0,0.5)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#FFFFFF',
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Image */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <img
+              src={capturedDataUrl}
+              alt="Watermarked Live Capture"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          </div>
+
+          {/* Bottom Action Footer */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: '20px 24px 28px',
               display: 'flex',
               justifyContent: 'center',
-              gap: 12,
-              padding: '0 16px',
+              gap: 16,
+              zIndex: 10,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)',
             }}
           >
             <button
               type="button"
-              className="btn btn-secondary btn-sm"
               onClick={handleRetake}
-              style={{ background: '#ffffff', color: '#0f172a' }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                color: '#FFFFFF',
+                padding: '12px 24px',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
             >
-              <RefreshCw size={13} /> Retake Photo
+              <RefreshCw size={16} /> Retake
             </button>
             <button
               type="button"
-              className="btn btn-primary btn-sm"
               onClick={handleConfirm}
-              style={{ background: '#059669', borderColor: '#059669', color: '#ffffff' }}
+              style={{
+                background: '#059669',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '12px 28px',
+                borderRadius: 10,
+                fontSize: 14,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.4)',
+              }}
             >
-              <Check size={14} /> Use Verified Photo
+              <Check size={18} strokeWidth={2.5} /> Use Verified Photo
             </button>
           </div>
         </div>
       ) : (
+        /* Live Viewfinder Fullscreen */
         <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {!isCameraReady && (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a', color: '#94a3b8', fontSize: 13, zIndex: 5 }}>
-              Initializing live camera feed...
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#000000', color: '#94A3B8', fontSize: 14, gap: 10, zIndex: 5 }}>
+              <RefreshCw className="spin" size={24} color="#0284C7" />
+              <span>Starting Fullscreen Live Camera...</span>
             </div>
           )}
+
+          {/* Video Feed */}
           <video
             ref={videoRef}
             playsInline
             muted
-            style={{ width: '100%', height: '100%', minHeight: 300, objectFit: 'cover', background: '#000' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', background: '#000' }}
           />
 
-          {/* Live Overlay Target Viewfinder */}
+          {/* Top HUD Bar */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              zIndex: 10,
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, transparent 100%)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
+              <span style={{ color: '#FFFFFF', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                Live Site Audit Mode
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button
+                type="button"
+                onClick={switchCamera}
+                style={{
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#FFFFFF',
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(4px)',
+                }}
+                title="Switch Camera (Front/Rear)"
+              >
+                <RefreshCw size={18} />
+              </button>
+
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#FFFFFF',
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(4px)',
+                  }}
+                  title="Close Fullscreen Camera"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Viewfinder Grid Overlays */}
           <div
             style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '75%',
-              height: '65%',
-              border: '2px dashed rgba(255, 255, 255, 0.6)',
-              borderRadius: 8,
+              width: '80%',
+              maxWidth: 480,
+              height: '55%',
+              maxHeight: 380,
+              border: '2px dashed rgba(255, 255, 255, 0.5)',
+              borderRadius: 12,
               pointerEvents: 'none',
+              boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.25)',
             }}
           />
 
-          {/* Live Watermark Overlay Preview */}
+          {/* Live Watermark Overlay Tag */}
           <div
             style={{
               position: 'absolute',
-              bottom: 60,
-              left: 12,
-              background: 'rgba(15, 23, 42, 0.8)',
-              padding: '6px 12px',
-              borderRadius: 6,
-              color: '#ffffff',
-              fontSize: 11,
-              fontFamily: 'var(--font-mono)',
+              bottom: 110,
+              left: 20,
+              right: 20,
+              maxWidth: 440,
+              background: 'rgba(15, 23, 42, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              padding: '8px 14px',
+              borderRadius: 10,
+              color: '#FFFFFF',
+              fontSize: 11.5,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2,
+              gap: 3,
               pointerEvents: 'none',
-              backdropFilter: 'blur(4px)',
+              backdropFilter: 'blur(6px)',
+              margin: '0 auto',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#10b981', fontWeight: 700 }}>
-              <MapPin size={12} /> LIVE GPS: {latitude}, {longitude}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#38BDF8', fontWeight: 700, fontFamily: 'var(--font-mono, monospace)' }}>
+                <MapPin size={13} /> GPS: {latitude}, {longitude}
+              </div>
+              <div style={{ color: '#FCD34D', fontSize: 11, fontWeight: 700, fontFamily: 'var(--font-mono, monospace)' }}>
+                {new Date().toLocaleTimeString('en-GB', { hour12: false })} IST
+              </div>
             </div>
-            <div style={{ color: '#94a3b8', fontSize: 10 }}>{address || 'Ward-04 Landmark Zone'}</div>
+            <div style={{ color: '#CBD5E1', fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {address || 'Ward-04 Jurisdiction, MCD Delhi'}
+            </div>
           </div>
 
-          {/* Camera Controls */}
+          {/* Bottom Shutter Action Bar */}
           <div
             style={{
               position: 'absolute',
-              bottom: 12,
+              bottom: 0,
               left: 0,
               right: 0,
+              padding: '20px 24px 30px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 20,
+              zIndex: 10,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
             }}
           >
-            <button
-              type="button"
-              onClick={switchCamera}
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: '50%',
-                background: 'rgba(255, 255, 255, 0.25)',
-                border: 'none',
-                color: '#ffffff',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backdropFilter: 'blur(4px)',
-              }}
-              title="Switch Camera"
-            >
-              <RefreshCw size={16} />
-            </button>
-
             <button
               type="button"
               onClick={capturePhoto}
               style={{
-                width: 56,
-                height: 56,
+                width: 72,
+                height: 72,
                 borderRadius: '50%',
-                background: '#ffffff',
-                border: '4px solid var(--primary, #0284c7)',
+                background: '#FFFFFF',
+                border: '5px solid #0284C7',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 16px rgba(2, 132, 199, 0.6)',
+                boxShadow: '0 0 24px rgba(2, 132, 199, 0.6)',
+                transition: 'transform 0.1s ease',
               }}
-              title="Capture Live Photo"
+              onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.92)')}
+              onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              title="Take Photo with Geotag & Timestamp Watermark"
             >
-              <Camera size={24} color="var(--primary, #0284c7)" />
+              <Camera size={30} color="#0284C7" />
             </button>
-
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.25)',
-                  border: 'none',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backdropFilter: 'blur(4px)',
-                }}
-                title="Cancel"
-              >
-                <X size={16} />
-              </button>
-            )}
           </div>
         </div>
       )}
     </div>
   );
 };
+

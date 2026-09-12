@@ -437,6 +437,10 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
 }
 
+.header-brand-text {
+  display: inline;
+}
+
 @media (max-width: 1023px) {
   .header-brand {
     display: flex;
@@ -829,8 +833,33 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0 8px;
   }
   .adaptive-header {
-    padding: 0 16px;
-    height: 56px;
+    padding: 10px 16px;
+    height: auto;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-brand {
+    display: flex;
+    flex: 1;
+  }
+  .header-brand-text {
+    display: none;
+  }
+  .header-actions {
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .header-search-slot {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+  }
+  .apple-search-dropdown {
+    position: fixed;
+    top: 110px;
+    left: 16px;
+    right: 16px;
+    width: auto;
   }
   .stage-container {
     padding: 16px 14px 44px;
@@ -1213,12 +1242,14 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: var(--elevation-card);
 }
 
 .ledger-table {
   width: 100%;
+  min-width: 620px;
   border-collapse: collapse;
 }
 
@@ -1227,6 +1258,7 @@ h1, h2, h3, h4, h5, h6 {
   text-align: left;
   border-bottom: 1px solid var(--border-subtle);
   font-size: 13px;
+  vertical-align: middle;
 }
 
 .ledger-table th {
@@ -1236,10 +1268,25 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
-.ledger-table tr:hover td {
-  background: #F8FAFC;
+.ledger-row-clickable {
+  cursor: pointer;
+  transition: background 0.12s ease;
+  outline: none;
+}
+
+.ledger-row-clickable:hover td {
+  background: #F1F5F9;
+}
+
+.ledger-row-clickable:active td {
+  background: #E2E8F0;
+}
+
+.ledger-row-clickable:focus-visible td {
+  background: #EFF6FF;
 }
 
 .ref-id {
@@ -1266,6 +1313,13 @@ h1, h2, h3, h4, h5, h6 {
 .urgency-medium { background: var(--status-progress-fg); }
 .urgency-low { background: var(--status-verified-fg); }
 
+@media (max-width: 640px) {
+  .ledger-table th, .ledger-table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+}
+
 /* ==============================================================================
    INCIDENT CARD (Grid Mode)
    ============================================================================== */
@@ -1275,10 +1329,17 @@ h1, h2, h3, h4, h5, h6 {
   gap: 16px;
 }
 
+@media (max-width: 600px) {
+  .incidents-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
 .tactile-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   overflow: hidden;
   box-shadow: var(--elevation-card);
   display: flex;
@@ -1293,8 +1354,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .card-image-wrapper {
   position: relative;
-  height: 170px;
+  height: 220px;
   background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+@media (max-width: 600px) {
+  .card-image-wrapper {
+    height: 180px;
+  }
 }
 
 .card-image-wrapper img {
@@ -1383,6 +1451,62 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==============================================================================
+   VERIFICATION GRID
+   ============================================================================== */
+.verification-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.verification-image {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+}
+
+.verification-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.verification-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  padding: 3px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 4px;
+  color: #FFFFFF;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.badge-before {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.badge-after {
+  background: rgba(6, 95, 70, 0.85);
+  border: 1px solid var(--status-verified-border);
+}
+
+@media (max-width: 600px) {
+  .verification-grid {
+    grid-template-columns: 1fr;
+  }
+  .verification-image {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* ==============================================================================
    TIMELINE STEPPER
    ============================================================================== */
 .timeline-stepper {
@@ -1439,6 +1563,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-strip::-webkit-scrollbar {

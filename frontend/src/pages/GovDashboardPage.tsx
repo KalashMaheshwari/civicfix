@@ -5,7 +5,6 @@ import { DesktopRail } from '../components/DesktopRail';
 import { MobileDock } from '../components/MobileDock';
 import { CommandPalette } from '../components/CommandPalette';
 import { MetricCards } from '../components/MetricCards';
-import { IncidentCard } from '../components/IncidentCard';
 import { IncidentLedgerTable } from '../components/IncidentLedgerTable';
 import { ResolveModal } from '../components/ResolveModal';
 import { TicketDetailModal } from '../components/TicketDetailModal';
@@ -13,7 +12,7 @@ import { Toast } from '../components/Toast';
 import type { ToastMessage } from '../components/Toast';
 import type { Incident } from '../types/incident';
 import { fetchIncidents } from '../services/api';
-import { LayoutGrid, List, Filter, HardHat, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { Filter, HardHat, TrendingUp, CheckCircle, Clock, List } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { formatErrorMessage } from '../utils/errors';
 
@@ -23,7 +22,6 @@ export const GovDashboardPage: React.FC = () => {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [filter, setFilter] = useState<string>('ALL');
-  const [viewMode, setViewMode] = useState<'GRID' | 'TABLE'>(window.innerWidth >= 1024 ? 'TABLE' : 'GRID');
   const [resolveIncident, setResolveIncident] = useState<Incident | null>(null);
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -38,14 +36,6 @@ export const GovDashboardPage: React.FC = () => {
     const handler = () => setCmdOpen(true);
     document.addEventListener('open-command-palette', handler);
     return () => document.removeEventListener('open-command-palette', handler);
-  }, []);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) setViewMode('GRID');
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const addToast = (text: string, type: 'info' | 'error' | 'success' = 'info') => {
@@ -96,17 +86,6 @@ export const GovDashboardPage: React.FC = () => {
               <option value="CLOSED_VERIFIED">{t('status_verified_fixed')}</option>
             </select>
           </div>
-
-          {window.innerWidth >= 1024 && (
-            <div style={{ display: 'flex', gap: 2, border: '1px solid var(--border-default)', borderRadius: 'var(--radius-xs)', padding: 2, background: 'var(--bg-surface)' }}>
-              <button onClick={() => setViewMode('TABLE')} style={{ background: viewMode === 'TABLE' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'TABLE' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                <List size={14} />
-              </button>
-              <button onClick={() => setViewMode('GRID')} style={{ background: viewMode === 'GRID' ? 'var(--bg-subtle)' : 'transparent', border: 'none', padding: '4px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', color: viewMode === 'GRID' ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-                <LayoutGrid size={14} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
@@ -114,7 +93,7 @@ export const GovDashboardPage: React.FC = () => {
         <div className="card" style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
           <p style={{ fontWeight: 600, fontSize: 14 }}>No work orders in this triage state.</p>
         </div>
-      ) : viewMode === 'TABLE' ? (
+      ) : (
         <IncidentLedgerTable
           incidents={filtered}
           isLoading={isLoading}
@@ -127,32 +106,6 @@ export const GovDashboardPage: React.FC = () => {
             }
           }}
         />
-      ) : (
-        <div className="incidents-grid">
-          {isLoading ? (
-            Array.from({ length: 4 }).map((_, idx) => (
-              <div key={`gov-skel-${idx}`} className="card" style={{ height: 260, display: 'flex', flexDirection: 'column', gap: 12, padding: 16 }}>
-                <div className="skeleton" style={{ width: '100%', height: 130, borderRadius: 'var(--radius-sm)' }} />
-                <div className="skeleton" style={{ width: '60%', height: 18, borderRadius: 4 }} />
-                <div className="skeleton" style={{ width: '90%', height: 14, borderRadius: 4 }} />
-                <div className="skeleton" style={{ width: '40%', height: 14, borderRadius: 4, marginTop: 'auto' }} />
-              </div>
-            ))
-          ) : (
-            filtered.map((inc) => (
-              <IncidentCard
-                key={inc.id}
-                incident={inc}
-                role="official"
-                onVote={() => {}}
-                onOpenResolve={(id) => {
-                  const match = incidents.find((i) => i.id === id);
-                  if (match) setResolveIncident(match);
-                }}
-              />
-            ))
-          )}
-        </div>
       )}
     </>
   );

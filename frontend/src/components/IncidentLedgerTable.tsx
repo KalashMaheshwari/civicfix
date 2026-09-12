@@ -82,7 +82,21 @@ export const IncidentLedgerTable: React.FC<IncidentLedgerTableProps> = ({ incide
                 (inc.citizen_ids.includes(user.id) || (user.email && inc.citizen_ids.includes(user.email)))
               );
               return (
-              <tr key={inc.id}>
+              <tr 
+                key={inc.id}
+                onClick={() => onActionClick && onActionClick(inc)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onActionClick && onActionClick(inc);
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`Inspect ticket CF-${inc.id.substring(0,6).toUpperCase()}`}
+                className="ledger-row-clickable"
+                style={{ cursor: 'pointer' }}
+              >
                 <td>
                   <div style={{ width: 38, height: 38, borderRadius: 'var(--radius-xs)', background: 'var(--bg-subtle)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border-default)' }}>
                     {imgSrc ? (
@@ -124,7 +138,11 @@ export const IncidentLedgerTable: React.FC<IncidentLedgerTableProps> = ({ incide
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <button 
-                    onClick={() => onActionClick && onActionClick(inc)}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onActionClick && onActionClick(inc);
+                    }}
                     className="btn btn-secondary btn-sm"
                     style={{ padding: '4px 10px', fontSize: 12 }}
                   >
